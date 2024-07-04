@@ -8,13 +8,13 @@
 #include <string.h>
 #include <sys/stat.h>
 
-bool8 fileExists(const char* PATH)
+bool fileExists(const char* PATH)
 {
     struct stat buffer;
     return stat(PATH, &buffer) == 0;
 }
 
-bool8 openFile(const char* PATH, fileModes MODE, bool8 BINARY_MODE, File* OUTPUT_FILE)
+bool openFile(const char* PATH, fileModes MODE, bool BINARY_MODE, File* OUTPUT_FILE)
 {
     OUTPUT_FILE->handle = 0;
     OUTPUT_FILE->isValid = false;
@@ -66,7 +66,7 @@ void closeFile(File* INPUT_FILE)
     }
 }
 
-bool8 readFileLine(File* INPUT_FILE, char** BUFFER)
+bool readFileLine(File* INPUT_FILE, char** BUFFER)
 {
     if (INPUT_FILE->handle)
     {
@@ -85,7 +85,7 @@ bool8 readFileLine(File* INPUT_FILE, char** BUFFER)
     return false;
 }
 
-bool8 writeFileLine(File* INPUT_FILE, const char* TEXT)
+bool writeFileLine(File* INPUT_FILE, const char* TEXT)
 {
     if (INPUT_FILE->handle)
     {
@@ -104,7 +104,7 @@ bool8 writeFileLine(File* INPUT_FILE, const char* TEXT)
     return false;
 }
 
-bool8 readFile(File* INPUT_FILE, unsigned long long DATA_SIZE, void* BUFFER, unsigned long long* READ_BYTES)
+bool readFile(File* INPUT_FILE, unsigned long long DATA_SIZE, void* BUFFER, unsigned long long* READ_BYTES)
 {
     if (INPUT_FILE->handle && READ_BYTES)
     {
@@ -120,7 +120,7 @@ bool8 readFile(File* INPUT_FILE, unsigned long long DATA_SIZE, void* BUFFER, uns
     return false;
 }
 
-bool8 readAllBytes(File* INPUT_FILE, unsigned char** OUTPUT, unsigned long long* READ_BYTES)
+bool readAllBytes(File* INPUT_FILE, unsigned char** OUTPUT, unsigned long long* READ_BYTES)
 {
     if (INPUT_FILE->handle)
     {
@@ -143,7 +143,7 @@ bool8 readAllBytes(File* INPUT_FILE, unsigned char** OUTPUT, unsigned long long*
     return false;
 }
 
-bool8 writeFile(File* INPUT_FILE, unsigned long long DATA_SIZE, const void* DATA, unsigned long long* WRITE_BYTES)
+bool writeFile(File* INPUT_FILE, unsigned long long DATA_SIZE, const void* DATA, unsigned long long* WRITE_BYTES)
 {
     if (INPUT_FILE->handle)
     {

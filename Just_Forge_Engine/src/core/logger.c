@@ -35,7 +35,7 @@ void appendLogFile(const char* MESSAGE)
 }
 
 
-bool8 initializeLogger(unsigned long long* MEMORY_REQUIREMENT, void* STATE)
+bool initializeLogger(unsigned long long* MEMORY_REQUIREMENT, void* STATE)
 {
     *MEMORY_REQUIREMENT = sizeof(loggerSystemState);
     if (STATE == 0)
@@ -68,7 +68,7 @@ void shutdownLogger(void* STATE)
 void logOutput(LogLevel LEVEL, const char* MESSAGE, ...)
 {
     const char* levelStrings[6] = {"[FATAL]: ", "[ERROR]: ", "[WARN]: ", "[INFO]: ", "[DEBUG]: ", "[TRACE]: "};
-    bool8 isError = LEVEL < LOG_LEVEL_WARNING;
+    bool isError = LEVEL < LOG_LEVEL_WARNING;
     const int messageLength = 32000;
     char outputMessage[messageLength];
     memset(outputMessage, 0, sizeof(outputMessage));

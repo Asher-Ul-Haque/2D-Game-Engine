@@ -3,7 +3,7 @@
 
 // - - - Renderer Backend Functions - - -
 
-bool8 rendererBackendCreate(rendererBackendType TYPE, rendererBackend* BACKEND)
+bool rendererBackendCreate(rendererBackendType TYPE, rendererBackend* BACKEND)
 {
     switch (TYPE)
     {

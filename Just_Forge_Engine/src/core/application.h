@@ -21,8 +21,8 @@ typedef struct applicationConfig
 // - - - | Application Functions | - - -
 
 
-FORGE_API bool8 createApplication(struct game* GAME);
+FORGE_API bool createApplication(struct game* GAME);
 
-FORGE_API bool8 runApplication();
+FORGE_API bool runApplication();
 
 void applicationGetFrameBufferSize(unsigned int* WIDTH, unsigned int* HEIGHT);

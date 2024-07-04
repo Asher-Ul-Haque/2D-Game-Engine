@@ -163,27 +163,27 @@ void inputUpdate(double DELTA_TIME);
 // - - - Keyboard Functions - - -
 
 // - - - Key Functions
-FORGE_API bool8 inputIsKeyDown(keys KEY);
-FORGE_API bool8 inputIsKeyUp(keys KEY);
-FORGE_API bool8 inputWasKeyDown(keys KEY);
-FORGE_API bool8 inputWasKeyUp(keys KEY);
+FORGE_API bool inputIsKeyDown(keys KEY);
+FORGE_API bool inputIsKeyUp(keys KEY);
+FORGE_API bool inputWasKeyDown(keys KEY);
+FORGE_API bool inputWasKeyUp(keys KEY);
 
 // - - - Input Processing Functions
-void inputProcessKey(keys KEY, bool8 IS_DOWN);
+void inputProcessKey(keys KEY, bool IS_DOWN);
 
 
 // - - - Mouse Functions - - -
 
 // - - - Mouse Button Functions
-FORGE_API bool8 inputIsButtonDown(buttons BUTTON);
-FORGE_API bool8 inputIsButtonUp(buttons BUTTON);
-FORGE_API bool8 inputWasButtonDown(buttons BUTTON);
-FORGE_API bool8 inputWasButtonUp(buttons BUTTON);
+FORGE_API bool inputIsButtonDown(buttons BUTTON);
+FORGE_API bool inputIsButtonUp(buttons BUTTON);
+FORGE_API bool inputWasButtonDown(buttons BUTTON);
+FORGE_API bool inputWasButtonUp(buttons BUTTON);
 FORGE_API void inputGetMousePosition(int* X, int* Y);
 FORGE_API void inputGetPreviousMousePosition(int* X, int* Y);
 
 // - - - Input Processing Functions
-void inputProcessButton(buttons BUTTON, bool8 IS_DOWN);
+void inputProcessButton(buttons BUTTON, bool IS_DOWN);
 void inputProcessMouseMovement(short X, short Y);
 void inputProcessMouseWheel(char WHEEL_DELTA);
 

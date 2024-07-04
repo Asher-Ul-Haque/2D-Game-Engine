@@ -10,15 +10,15 @@
 
 typedef struct gpuRequirements
 {
-    bool8 graphics; //draw calls
-    bool8 present;  // present to screen
-    bool8 compute;  // shaders
-    bool8 transfer; // data transfer
+    bool graphics; //draw calls
+    bool present;  // present to screen
+    bool compute;  // shaders
+    bool transfer; // data transfer
 
     const char** gpuExtensionNames; //List of required extensions
 
-    bool8 samplerAnisotropy; //Anisotropic filtering means that the texture is sampled at a different rate depending on the angle of the surface
-    bool8 dedicated; // Integratde or dedicated
+    bool samplerAnisotropy; //Anisotropic filtering means that the texture is sampled at a different rate depending on the angle of the surface
+    bool dedicated; // Integratde or dedicated
 } gpuRequirements;
 
 typedef struct gpuQueueInfo
@@ -35,17 +35,17 @@ typedef struct gpuQueueInfo
 
 // - - - Forward Declarations - - -
 
-bool8 selectGPU(vulkanContext* CONTEXT);
+bool selectGPU(vulkanContext* CONTEXT);
 
-bool8 gpuMeetsRequirements(VkPhysicalDevice GPU, VkSurfaceKHR SURFACE, const VkPhysicalDeviceProperties* PROPERTIES, const VkPhysicalDeviceFeatures* FEATURES, const gpuRequirements* REQUIREMENTS, gpuQueueInfo* INFO, vulkanSwapchainSupportInfo* SWAPCHAIN_SUPPORT);
+bool gpuMeetsRequirements(VkPhysicalDevice GPU, VkSurfaceKHR SURFACE, const VkPhysicalDeviceProperties* PROPERTIES, const VkPhysicalDeviceFeatures* FEATURES, const gpuRequirements* REQUIREMENTS, gpuQueueInfo* INFO, vulkanSwapchainSupportInfo* SWAPCHAIN_SUPPORT);
 
-bool8 createVulkanDevice(vulkanContext* CONTEXT);
+bool createVulkanDevice(vulkanContext* CONTEXT);
 
 
 // - - - Implementations - - -
 
 // - - - Create and destroy the Vulkan device
-bool8 createVulkanDevice(vulkanContext* CONTEXT)
+bool createVulkanDevice(vulkanContext* CONTEXT)
 {
     if (!selectGPU(CONTEXT))
     {
@@ -53,9 +53,9 @@ bool8 createVulkanDevice(vulkanContext* CONTEXT)
     }
     FORGE_LOG_INFO("Creating Logical Device");
     // NOTE: do not create additional queues for shared indices
-    bool8 presentSharesGraphics = (CONTEXT->device.graphicsQueueIndex == CONTEXT->device.presentQueueIndex);
-    bool8 computeSharesGraphics = (CONTEXT->device.graphicsQueueIndex == CONTEXT->device.computeQueueIndex);
-    bool8 transferSharesGraphics = (CONTEXT->device.graphicsQueueIndex == CONTEXT->device.transferQueueIndex);
+    bool presentSharesGraphics = (CONTEXT->device.graphicsQueueIndex == CONTEXT->device.presentQueueIndex);
+    bool computeSharesGraphics = (CONTEXT->device.graphicsQueueIndex == CONTEXT->device.computeQueueIndex);
+    bool transferSharesGraphics = (CONTEXT->device.graphicsQueueIndex == CONTEXT->device.transferQueueIndex);
     unsigned int indexCount = 1;
 
     if (!presentSharesGraphics)
@@ -190,7 +190,7 @@ void destroyVulkanDevice(vulkanContext* CONTEXT)
 }
 
 // - - -  Detect the depth format
-bool8 vulkanDeviceDetectDepthFormat(vulkanDevice *DEVICE)
+bool vulkanDeviceDetectDepthFormat(vulkanDevice *DEVICE)
 {
     //Format candidates
     const unsigned long long candidateCount = 3;
@@ -221,7 +221,7 @@ bool8 vulkanDeviceDetectDepthFormat(vulkanDevice *DEVICE)
 }
 
 // - - - Query swapchain support
-bool8 vulkanDeviceQuerySwapchainSupport(VkPhysicalDevice GPU, VkSurfaceKHR SURFACE, vulkanSwapchainSupportInfo* INFO)
+bool vulkanDeviceQuerySwapchainSupport(VkPhysicalDevice GPU, VkSurfaceKHR SURFACE, vulkanSwapchainSupportInfo* INFO)
 {
     //Surface capabilities
     VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(GPU, SURFACE, &INFO->capabilities));
@@ -251,7 +251,7 @@ bool8 vulkanDeviceQuerySwapchainSupport(VkPhysicalDevice GPU, VkSurfaceKHR SURFA
 }
 
 // - - - Check if the GPU meets the requirements
-bool8 gpuMeetsRequirements(
+bool gpuMeetsRequirements(
     VkPhysicalDevice GPU, 
     VkSurfaceKHR SURFACE, 
     const VkPhysicalDeviceProperties* PROPERTIES, 
@@ -365,7 +365,7 @@ bool8 gpuMeetsRequirements(
                 unsigned int requiredExtensionCount = listLength(REQUIREMENTS->gpuExtensionNames);
                 for (unsigned int i = 0; i < requiredExtensionCount; ++i)
                 {
-                    bool8 extensionFound = false;
+                    bool extensionFound = false;
                     for (unsigned int j = 0; j < extensionCount; ++j)
                     {
                         if (strcmp(REQUIREMENTS->gpuExtensionNames[i], availableExtensions[j].extensionName) == 0)
@@ -399,7 +399,7 @@ bool8 gpuMeetsRequirements(
 }
 
 // - - - Select the GPU
-bool8 selectGPU(vulkanContext* CONTEXT)
+bool selectGPU(vulkanContext* CONTEXT)
 {
     unsigned int gpuCount = 0;
     VK_CHECK(vkEnumeratePhysicalDevices(CONTEXT->instance, &gpuCount, 0));
@@ -435,7 +435,7 @@ bool8 selectGPU(vulkanContext* CONTEXT)
         listAppend(requirements.gpuExtensionNames, &VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         gpuQueueInfo queueInfo = {};
-        bool8 result = gpuMeetsRequirements(gpus[i], CONTEXT->surface, &properties, &features, &requirements, &queueInfo, &CONTEXT->device.swapchainSupport);
+        bool result = gpuMeetsRequirements(gpus[i], CONTEXT->surface, &properties, &features, &requirements, &queueInfo, &CONTEXT->device.swapchainSupport);
 
         if (result)
         {

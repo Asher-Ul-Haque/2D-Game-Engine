@@ -4,10 +4,10 @@
 
 // - - - | Vulkan Device Functions | - - -
 
-bool8 createVulkanDevice(vulkanContext* CONTEXT);
+bool createVulkanDevice(vulkanContext* CONTEXT);
 
 void destroyVulkanDevice(vulkanContext* CONTEXT);
 
-bool8 vulkanDeviceQuerySwapchainSupport(VkPhysicalDevice GPU, VkSurfaceKHR SURFACE, vulkanSwapchainSupportInfo* INFO);
+bool vulkanDeviceQuerySwapchainSupport(VkPhysicalDevice GPU, VkSurfaceKHR SURFACE, vulkanSwapchainSupportInfo* INFO);
 
-bool8 vulkanDeviceDetectDepthFormat(vulkanDevice* DEVICE);
+bool vulkanDeviceDetectDepthFormat(vulkanDevice* DEVICE);

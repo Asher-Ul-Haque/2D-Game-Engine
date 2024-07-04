@@ -10,7 +10,7 @@
 
 
 // - - - External Function
-extern bool8 createGame(game* OUPUT_GAME);
+extern bool createGame(game* OUPUT_GAME);
 
 // - - - Main Function
 int main(void)

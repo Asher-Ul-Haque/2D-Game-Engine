@@ -12,7 +12,7 @@ void create(vulkanContext* CONTEXT, unsigned int WIDTH, unsigned int HEIGHT, vul
     SWAPCHAIN->maxFramesInFlight = 2; //suporting triple buffering
     
     // Choose a swap surface format
-    bool8 foundFormat = false;
+    bool foundFormat = false;
     for (unsigned int i = 0; i < CONTEXT->device.swapchainSupport.formatCount; ++i)
     {
         VkSurfaceFormatKHR format = CONTEXT->device.swapchainSupport.formats[i];
@@ -172,7 +172,7 @@ void destroyVulkanSwapchain(vulkanContext* CONTEXT, vulkanSwapchain* SWAPCHAIN)
     destroy(CONTEXT, SWAPCHAIN);
 }
 
-bool8 vulkanSwapchainAquireNextImageIndex(vulkanContext* CONTEXT, vulkanSwapchain* SWAPCHAIN, unsigned long long TIMEOUT, VkSemaphore IMAGE_AVAILABLE_SEMAPHORE, VkFence FENCE, unsigned int* IMAGE_INDEX)
+bool vulkanSwapchainAquireNextImageIndex(vulkanContext* CONTEXT, vulkanSwapchain* SWAPCHAIN, unsigned long long TIMEOUT, VkSemaphore IMAGE_AVAILABLE_SEMAPHORE, VkFence FENCE, unsigned int* IMAGE_INDEX)
 {
     VkResult result = vkAcquireNextImageKHR(CONTEXT->device.logicalDevice, SWAPCHAIN->handle, TIMEOUT, IMAGE_AVAILABLE_SEMAPHORE, FENCE, IMAGE_INDEX);
 

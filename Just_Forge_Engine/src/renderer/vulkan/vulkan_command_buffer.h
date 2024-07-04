@@ -6,14 +6,14 @@
 
 // - - - Allocation - - -
 
-void commandBufferAllocate(vulkanContext* CONTEXT, VkCommandPool COMMAND_POOL, bool8 IS_PRIMARY, vulkanCommandBuffer* COMMAND_BUFFER);
+void commandBufferAllocate(vulkanContext* CONTEXT, VkCommandPool COMMAND_POOL, bool IS_PRIMARY, vulkanCommandBuffer* COMMAND_BUFFER);
 
 void commandBufferFree(vulkanContext* CONTEXT, VkCommandPool COMMAND_POOL, vulkanCommandBuffer* COMMAND_BUFFER);
 
 
 // - - - Recording - - - 
 
-void commandBufferBegin(vulkanCommandBuffer* COMMAND_BUFFER, bool8 IS_SINGLE_USE, bool8 IS_SIMULTANEOUS_USE, bool8 IS_RENDERPASS_CONTINUE);
+void commandBufferBegin(vulkanCommandBuffer* COMMAND_BUFFER, bool IS_SINGLE_USE, bool IS_SIMULTANEOUS_USE, bool IS_RENDERPASS_CONTINUE);
 
 void commandBufferEnd(vulkanCommandBuffer* COMMAND_BUFFER);
 

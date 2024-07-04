@@ -8,7 +8,7 @@
 
 // - - - Allocation - - -
 
-void commandBufferAllocate(vulkanContext* CONTEXT, VkCommandPool COMMAND_POOL, bool8 IS_PRIMARY, vulkanCommandBuffer* COMMAND_BUFFER)
+void commandBufferAllocate(vulkanContext* CONTEXT, VkCommandPool COMMAND_POOL, bool IS_PRIMARY, vulkanCommandBuffer* COMMAND_BUFFER)
 {
     forgeZeroMemory(COMMAND_BUFFER, sizeof(COMMAND_BUFFER));
     VkCommandBufferAllocateInfo allocateInfo = {};
@@ -32,7 +32,7 @@ void commandBufferFree(vulkanContext* CONTEXT, VkCommandPool COMMAND_POOL, vulka
 
 // - - - Recording - - -
 
-void commandBufferBegin(vulkanCommandBuffer* COMMAND_BUFFER, bool8 IS_SINGLE_USE, bool8 IS_SIMULTANEOUS_USE, bool8 IS_RENDERPASS_CONTINUE)
+void commandBufferBegin(vulkanCommandBuffer* COMMAND_BUFFER, bool IS_SINGLE_USE, bool IS_SIMULTANEOUS_USE, bool IS_RENDERPASS_CONTINUE)
 {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

@@ -66,7 +66,7 @@ void eventSystemShutdown(void* STATE)
 
 // - - - Game developer functions - - -
 
-bool8 eventRegister(unsigned short CODE,  void* LISTENER, eventCallback CALLBACK)
+bool eventRegister(unsigned short CODE,  void* LISTENER, eventCallback CALLBACK)
 {
     if (!statePtr)
     {
@@ -98,7 +98,7 @@ bool8 eventRegister(unsigned short CODE,  void* LISTENER, eventCallback CALLBACK
     return true;
 }
 
-bool8 eventUnregister(unsigned short CODE, void* LISTENER, eventCallback CALLBACK)
+bool eventUnregister(unsigned short CODE, void* LISTENER, eventCallback CALLBACK)
 {
     if (!statePtr)
     {
@@ -130,7 +130,7 @@ bool8 eventUnregister(unsigned short CODE, void* LISTENER, eventCallback CALLBAC
     return false;
 }
 
-bool8 eventTrigger(unsigned short CODE, void* SENDER, eventContext CONTEXT)
+bool eventTrigger(unsigned short CODE, void* SENDER, eventContext CONTEXT)
 {
     if (!statePtr)
     {

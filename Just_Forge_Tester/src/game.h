@@ -16,10 +16,10 @@ typedef struct gameState
 
 // - - - Game Functions - - -
 
-bool8 gameInit(game* GAME);
+bool gameInit(game* GAME);
 
-bool8 gameUpdate(game* GAME, float DELTA_TIME);
+bool gameUpdate(game* GAME, float DELTA_TIME);
 
-bool8 gameRender(game* GAME, float DELTA_TIME);
+bool gameRender(game* GAME, float DELTA_TIME);
 
 void gameOnResize(game* GAME, unsigned int WIDTH, unsigned int HEIGHT);

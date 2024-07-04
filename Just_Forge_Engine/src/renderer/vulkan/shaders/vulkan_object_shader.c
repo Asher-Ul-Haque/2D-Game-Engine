@@ -8,7 +8,7 @@
 
 #define BUILTIN_SHADER_NAME_OBJECT "Builtin.ObjectShader"
 
-bool8 createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
+bool createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
 {
     FORGE_LOG_DEBUG("Shader module init stage");
     char stageTypeStrings[OBJECT_SHADER_STAGE_COUNT][5] = {"vert", "frag"};

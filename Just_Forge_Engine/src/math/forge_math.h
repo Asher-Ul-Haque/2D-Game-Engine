@@ -37,7 +37,7 @@ FORGE_API float forgeSqrt(float VALUE);
 FORGE_API float forgeAbs(float VALUE);
 
 // - - - Utility functions
-FORGE_INLINE bool8 isPowerOfTwo(unsigned int VALUE) 
+FORGE_INLINE bool isPowerOfTwo(unsigned int VALUE) 
 { 
     return ((VALUE & (VALUE - 1)) == 0) && (VALUE != 0); 
 }
@@ -159,7 +159,7 @@ FORGE_INLINE Vector2D normalizedVector2D(Vector2D A)
     return A;
 }
 
-FORGE_INLINE bool8 compareVector2D(Vector2D A, Vector2D B, float TOLERANCE)
+FORGE_INLINE bool compareVector2D(Vector2D A, Vector2D B, float TOLERANCE)
 {
     if (forgeAbs(A.x - B.x) > TOLERANCE) 
     {
@@ -878,7 +878,7 @@ FORGE_INLINE Matrix4 quaternionToRotationMatrix(Quaternion QUAT, Vector3D CENTER
     return output;
 }
 
-FORGE_INLINE Quaternion quaternionFromAxisAngle(Vector3D AXIS, float ANGLE, bool8 NORMALIZE)
+FORGE_INLINE Quaternion quaternionFromAxisAngle(Vector3D AXIS, float ANGLE, bool NORMALIZE)
 {
     const float halfAngle = 0.5f * ANGLE;
     float s = forgeSin(halfAngle); 

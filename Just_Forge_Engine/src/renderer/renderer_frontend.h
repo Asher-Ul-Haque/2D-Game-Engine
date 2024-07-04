@@ -13,4 +13,4 @@ void rendererSystemShutdown(void* STATE);
 
 void rendererResized(unsigned short WIDTH, unsigned short HEIGHT);
 
-bool8 rendererDrawFrame(rendererPacket* PACKET);
+bool rendererDrawFrame(rendererPacket* PACKET);

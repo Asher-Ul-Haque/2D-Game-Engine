@@ -22,15 +22,15 @@ typedef struct rendererBackend
 {
     unsigned long long frameNumber;
 
-    bool8 (*initialize)(struct rendererBackend* BACKEND, const char* APPLICATION);
+    bool (*initialize)(struct rendererBackend* BACKEND, const char* APPLICATION);
 
     void (*shutdown)(struct rendererBackend* BACKEND);
 
     void (*resized)(struct rendererBackend* BACKEND, unsigned short WIDTH, unsigned short HEIGHT);
 
-    bool8 (*beginFrame)(struct rendererBackend* BACKEND, float DELTA_TIME);
+    bool (*beginFrame)(struct rendererBackend* BACKEND, float DELTA_TIME);
 
-    bool8 (*endFrame)(struct rendererBackend* BACKEND, float DELTA_TIME);
+    bool (*endFrame)(struct rendererBackend* BACKEND, float DELTA_TIME);
     
 } rendererBackend;
 

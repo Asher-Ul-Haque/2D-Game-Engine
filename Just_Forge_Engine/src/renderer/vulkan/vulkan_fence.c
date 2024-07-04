@@ -1,7 +1,7 @@
 #include "vulkan_fence.h"
 #include "core/logger.h"
 
-void createFence(vulkanContext* CONTEXT, bool8 createSignal, vulkanFence* FENCE)
+void createFence(vulkanContext* CONTEXT, bool createSignal, vulkanFence* FENCE)
 {
     VkFenceCreateInfo fenceCreateInfo = {};
     fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -19,7 +19,7 @@ void destroyFence(vulkanContext* CONTEXT, vulkanFence* FENCE)
     FENCE->isSignaled = false;
 }
 
-bool8 waitForFence(vulkanContext *CONTEXT, vulkanFence *FENCE, unsigned long long TIMEOUT)
+bool waitForFence(vulkanContext *CONTEXT, vulkanFence *FENCE, unsigned long long TIMEOUT)
 {
     if (!FENCE->isSignaled)
     {

@@ -1,6 +1,6 @@
 #pragma once
 #include "vulkan_types.h"
 
-const char* vulkanResultToString(VkResult RESULT, bool8 GET_MORE);
+const char* vulkanResultToString(VkResult RESULT, bool GET_MORE);
 
-bool8 resultSuccess(VkResult RESULT);
+bool resultSuccess(VkResult RESULT);

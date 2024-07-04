@@ -43,13 +43,16 @@ void regenerateFramebuffers(rendererBackend* BACKEND, vulkanSwapchain* SWAPCHAIN
 int findMemoryIndex(unsigned int TYPE_FILTER, unsigned int PROPERTIES_FLAGS);
 
 // - - - Recreate Swapchain
-bool8 recreateSwapchain(rendererBackend* BACKEND);
+bool recreateSwapchain(rendererBackend* BACKEND);
+
+// - - - Create Buffers
+bool createBuffers(vulkanContext* CONTEXT);
 
 
 // - - - | Vulkan as a Renderer Backend | - - -
 
 
-bool8 vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APPLICATION)
+bool vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APPLICATION)
 {
     //Function pointers
     context.findMemoryIndex = findMemoryIndex;
@@ -113,7 +116,7 @@ bool8 vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APPL
         for (unsigned int i = 0; i < requiredValidationLayerCount; ++i)
         {
             FORGE_LOG_DEBUG("Checking for validation layer: %s", requiredValidationLayerNames[i]);
-            bool8 layerFound = false;
+            bool layerFound = false;
             for (unsigned int j = 0; j < availableLayerCount; ++j)
             {
                 if (strcmp(requiredValidationLayerNames[i], availableLayers[j].layerName) == 0)
@@ -215,6 +218,13 @@ bool8 vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APPL
         FORGE_LOG_ERROR("Failed to initialize object shader");
         return false;
     }
+
+    // Buffers
+    if (!createBuffers(&context))
+    {
+        FORGE_LOG_ERROR("Failed to create buffers");
+        return false;
+    }
     
     FORGE_LOG_INFO("Vulkan Renderer Initialized");
     return true;
@@ -298,7 +308,7 @@ void vulkanRendererBackendResized(rendererBackend* BACKEND, unsigned short WIDTH
     FORGE_LOG_DEBUG("Framebuffer resized to %d x %d with generation %d", WIDTH, HEIGHT, context.framebufferSizeGeneration);
 }
 
-bool8 vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME)
+bool vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME)
 {
     vulkanDevice* gpu = &context.device;
     
@@ -380,7 +390,7 @@ bool8 vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME
     return true;
 }
 
-bool8 vulkanRendererBackendEndFrame(rendererBackend* BACKEND, float DELTA_TIME)
+bool vulkanRendererBackendEndFrame(rendererBackend* BACKEND, float DELTA_TIME)
 {
     vulkanCommandBuffer* commandBuffer = &context.graphicsCommandBuffers[context.imageIndex];
 
@@ -511,7 +521,7 @@ void regenerateFramebuffers(rendererBackend* BACKEND, vulkanSwapchain* SWAPCHAIN
     }
 }
 
-bool8 recreateSwapchain(rendererBackend* BACKEND)
+bool recreateSwapchain(rendererBackend* BACKEND)
 {
     //If already recreating swapchain, boot out
     if (context.recreateSwapchain)
@@ -591,4 +601,9 @@ bool8 recreateSwapchain(rendererBackend* BACKEND)
     context.recreateSwapchain = false;
 
     return true;
+}
+
+bool createBuffers(vulkanContext* CONTEXT)
+{
+
 }

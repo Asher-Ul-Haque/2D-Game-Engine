@@ -56,7 +56,7 @@ static platformState* statePtr;
 
 // - - - State Functions - - -
 
-bool8 platformSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APPLICATION, int X, int Y, int WIDTH, int HEIGHT)
+bool platformSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APPLICATION, int X, int Y, int WIDTH, int HEIGHT)
 {
     *MEMORY_REQUIREMENT = sizeof(platformState);
     if (STATE == 0)
@@ -198,14 +198,14 @@ void platformSystemShutdown(void* STATE)
     }
 }
 
-bool8 platformGiveMessages()
+bool platformGiveMessages()
 {
     if (statePtr)
     {
         xcb_generic_event_t* event;
         xcb_client_message_event_t* clientMessage;
 
-        bool8 quitFlag = false;
+        bool quitFlag = false;
     
         while ((event = xcb_poll_for_event(statePtr->connection)))
         {
@@ -221,7 +221,7 @@ bool8 platformGiveMessages()
                 case XCB_KEY_RELEASE:
                 {
                     xcb_key_press_event_t* keyEvent = (xcb_key_press_event_t *) event;
-                    bool8 pressed = event->response_type == XCB_KEY_PRESS;
+                    bool pressed = event->response_type == XCB_KEY_PRESS;
                     xcb_keycode_t code = keyEvent->detail;
                     KeySym keySym = XkbKeycodeToKeysym(statePtr->display, (KeyCode) code, 0, code & ShiftMask ? 1 : 0);
                     keys key = translateKeycode(keySym);
@@ -234,7 +234,7 @@ bool8 platformGiveMessages()
                 case XCB_BUTTON_RELEASE:
                 {
                     xcb_button_press_event_t* mouseEvent = (xcb_button_press_event_t *) event;
-                    bool8 pressed = event->response_type == XCB_BUTTON_PRESS;
+                    bool pressed = event->response_type == XCB_BUTTON_PRESS;
                     buttons mouseButton = BUTTON_MAX_BUTTONS;
                     switch (mouseEvent->detail)
                     {
@@ -301,12 +301,12 @@ bool8 platformGiveMessages()
 
 // - - - Memory Functions - - -
 
-void* platformAllocateMemory(unsigned long long SIZE, bool8 ALIGNED)
+void* platformAllocateMemory(unsigned long long SIZE, bool ALIGNED)
 {
     return malloc(SIZE);
 }
 
-void platformFreeMemory(void* MEMORY, bool8 ALIGNED)
+void platformFreeMemory(void* MEMORY, bool ALIGNED)
 {
     free(MEMORY);
 }
@@ -787,7 +787,7 @@ void platformGetRequiredExtensions(const char*** EXTENSIONS)
 }
 
 // - - - Surface creation for Vulkan
-bool8 platformCreateSurface(vulkanContext* CONTEXT)
+bool platformCreateSurface(vulkanContext* CONTEXT)
 {
     if (!statePtr)
     {

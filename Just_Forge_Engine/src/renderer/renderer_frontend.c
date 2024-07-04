@@ -53,7 +53,7 @@ void rendererSystemShutdown(void* STATE)
     FORGE_LOG_INFO("Renderer Backend Shutdown");
 }
 
-bool8 rendererBeginFrame(float DELTA_TIME)
+bool rendererBeginFrame(float DELTA_TIME)
 {
     if (!statePtr)
     {
@@ -63,14 +63,14 @@ bool8 rendererBeginFrame(float DELTA_TIME)
     return statePtr->backend.beginFrame(&statePtr->backend, DELTA_TIME);
 }
 
-bool8 rendererEndFrame(float DELTA_TIME)
+bool rendererEndFrame(float DELTA_TIME)
 {
     if (!statePtr)
     {
         FORGE_LOG_WARNING("Renderer System not initialized");
         return false;
     }
-    bool8 result = statePtr->backend.endFrame(&statePtr->backend, DELTA_TIME);
+    bool result = statePtr->backend.endFrame(&statePtr->backend, DELTA_TIME);
     ++statePtr->backend.frameNumber;
     return result;
 }
@@ -87,7 +87,7 @@ void rendererResized(unsigned short WIDTH, unsigned short HEIGHT)
     }
 }
 
-bool8 rendererDrawFrame(rendererPacket *PACKET)
+bool rendererDrawFrame(rendererPacket *PACKET)
 {
     if (rendererBeginFrame(PACKET->deltaTime))
     {

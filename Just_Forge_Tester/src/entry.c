@@ -5,7 +5,7 @@
 
 
 //Define the function to create a game
-bool8 createGame(game* OUTPUT_GAME)
+bool createGame(game* OUTPUT_GAME)
 {
     OUTPUT_GAME->config.startPositionX = 100;
     OUTPUT_GAME->config.startPositionY = 100;

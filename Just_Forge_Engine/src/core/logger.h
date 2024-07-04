@@ -41,7 +41,7 @@ typedef enum LogLevel
 
 // - - - System Controls - - -
 
-bool8 initializeLogger(unsigned long long* MEMORY_REQUIREMENT, void* STATE);
+bool initializeLogger(unsigned long long* MEMORY_REQUIREMENT, void* STATE);
 void shutdownLogger(void* STATE);
 
 

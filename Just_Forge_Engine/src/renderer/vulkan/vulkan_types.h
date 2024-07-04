@@ -15,6 +15,18 @@
 // - - - | Structs | - - -
 
 
+// - - - Vulkan Buffers
+typedef struct vulkanBuffer
+{
+    unsigned long long totalSize;
+    VkBuffer handle;
+    VkBufferUsageFlagBits usage;
+    bool isLocked;
+    VkDeviceMemory memory;
+    int memoryIndex;
+    unsigned int memoryPropertyFlags;
+} vulkanBuffer;
+
 // - - - Vulkan Swapchain Support Info
 typedef struct vulkanSwapchainSupportInfo
 {
@@ -131,7 +143,7 @@ typedef struct vulkanSwapchain
 typedef struct vulkanFence
 {
     VkFence handle;
-    bool8 isSignaled;
+    bool isSignaled;
 } vulkanFence;
 
 // - - - Vulkan Pipleline
@@ -177,7 +189,7 @@ typedef struct vulkanContext
     unsigned int currentFrame;
     vulkanCommandBuffer* graphicsCommandBuffers;
 
-    bool8 recreateSwapchain;
+    bool recreateSwapchain;
     int (*findMemoryIndex)(unsigned int TYPE_FILTER, unsigned int PROPERTY_FLAGS);
     VkSemaphore* imageAvailableSemaphores;
     VkSemaphore* renderFinishedSemaphores;

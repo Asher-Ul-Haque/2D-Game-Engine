@@ -48,7 +48,7 @@ void clockSetup()
 }
 
 // - - - Initialize the platform
-bool8 platformSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APPLICATION, int X, int Y, int WIDTH, int HEIGHT)
+bool platformSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APPLICATION, int X, int Y, int WIDTH, int HEIGHT)
 {
     *MEMORY_REQUIREMENT = sizeof(platformState);
     if (STATE == 0)
@@ -130,7 +130,7 @@ bool8 platformSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STA
     }
 
     //Show the window
-    bool8 shouldActivate = 1; // TODO: if the windows should not accept input, set this to 0
+    bool shouldActivate = 1; // TODO: if the windows should not accept input, set this to 0
     int showWindowCommandFlags = shouldActivate ? SW_SHOW : SW_SHOWNOACTIVATE;
     //If the window is initially minimized, use SW_MINIMIZE : SW_SHOWMINNOACTIVE
     //If the window is initially maximized, use SW_MAXIMIZE : SW_SHOWMAXIMIZED
@@ -154,7 +154,7 @@ void platformSystemShutdown(void *STATE)
 }
 
 // - - - Give messages
-bool8 platformGiveMessages()
+bool platformGiveMessages()
 {
     if (statePtr)
     {
@@ -172,12 +172,12 @@ bool8 platformGiveMessages()
 
 // - - - Memory Function - - -
 
-void* platformAllocateMemory(unsigned long long SIZE, bool8 ALIGNED)
+void* platformAllocateMemory(unsigned long long SIZE, bool ALIGNED)
 {
     return malloc(SIZE);
 }
 
-void platformFreeMemory(void* MEMORY, bool8 ALIGNED)
+void platformFreeMemory(void* MEMORY, bool ALIGNED)
 {
     free(MEMORY);
 }
@@ -288,7 +288,7 @@ LRESULT CALLBACK windowsProcessMessage(HWND HANDLE_WINDOW, unsigned int MESSAGE,
         case WM_KEYUP:
 
         case WM_SYSKEYUP:
-            bool8 pressed = (MESSAGE == WM_KEYDOWN || MESSAGE == WM_SYSKEYDOWN);
+            bool pressed = (MESSAGE == WM_KEYDOWN || MESSAGE == WM_SYSKEYDOWN);
             keys key = (unsigned short) WINDOW_PARAMETER;
             inputProcessKey(key, pressed);
             break;
@@ -355,7 +355,7 @@ void platformGetRequiredExtensions(const char*** EXTENSIONS)
 }
 
 // - - - Vulkan Surface Creation
-bool8 platformCreateSurface(vulkanContext* CONTEXT)
+bool platformCreateSurface(vulkanContext* CONTEXT)
 {
     if (!statePtr)
     {

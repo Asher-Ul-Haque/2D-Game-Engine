@@ -85,7 +85,7 @@ typedef struct eventContext
 
 // - - - Callback
 // Return true to stop the event from being passed to other listeners and if you handled the event
-typedef bool8 (*eventCallback)(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT);
+typedef bool (*eventCallback)(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT);
 
 
 // - - - | Event System functions | - - -
@@ -101,9 +101,9 @@ void eventSystemShutdown(void* STATE);
 // - - - Game developer functions - - -
 
 // Register to listen for events. Events with duplicate listener/callback pairs will be ignored and returned as false
-FORGE_API bool8 eventRegister(unsigned short CODE, void* LISTENER, eventCallback CALLBACK);
+FORGE_API bool eventRegister(unsigned short CODE, void* LISTENER, eventCallback CALLBACK);
 
 // Unregister to listen for events. Events with duplicate listener/callback pairs will be ignored and returned as false
-FORGE_API bool8 eventUnregister(unsigned short CODE, void* LISTENER, eventCallback CALLBACK);
+FORGE_API bool eventUnregister(unsigned short CODE, void* LISTENER, eventCallback CALLBACK);
 
-FORGE_API bool8 eventTrigger(unsigned short CODE, void* SENDER, eventContext CONTEXT);
+FORGE_API bool eventTrigger(unsigned short CODE, void* SENDER, eventContext CONTEXT);

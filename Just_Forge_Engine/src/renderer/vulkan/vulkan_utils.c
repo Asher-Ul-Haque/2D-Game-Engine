@@ -1,7 +1,7 @@
 #include "vulkan_utils.h"
 
 
-const char* vulkanResultToString(VkResult RESULT, bool8 GET_MORE)
+const char* vulkanResultToString(VkResult RESULT, bool GET_MORE)
 {
     // From: https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkResult.html
     // Success Codes
@@ -121,7 +121,7 @@ const char* vulkanResultToString(VkResult RESULT, bool8 GET_MORE)
 }
 
 
-bool8 resultSuccess(VkResult RESULT)
+bool resultSuccess(VkResult RESULT)
 {
     switch (RESULT)
     {

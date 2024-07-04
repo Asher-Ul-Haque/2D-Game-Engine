@@ -10,7 +10,7 @@ typedef struct PileAllocator
     unsigned long long totalSize;
     unsigned long long allocatedSize;
     void* memory;
-    bool8 ownsMemory;
+    bool ownsMemory;
 } PileAllocator;
 
 

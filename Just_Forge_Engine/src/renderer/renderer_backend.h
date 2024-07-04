@@ -7,6 +7,6 @@
 
 // - - - Renderer Backend Functions - - - 
 
-bool8 rendererBackendCreate(rendererBackendType TYPE, rendererBackend* BACKEND);
+bool rendererBackendCreate(rendererBackendType TYPE, rendererBackend* BACKEND);
 
 void rendererBackendDestroy(rendererBackend* BACKEND);

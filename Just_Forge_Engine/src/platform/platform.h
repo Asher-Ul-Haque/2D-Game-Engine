@@ -7,18 +7,18 @@
 
 // - - - State Functions - - -
 
-bool8 platformSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APPLICATION, int X, int Y, int WIDTH, int HEIGHT);
+bool platformSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APPLICATION, int X, int Y, int WIDTH, int HEIGHT);
 
 void platformSystemShutdown(void* STATE);
 
-bool8 platformGiveMessages();
+bool platformGiveMessages();
 
 
 // - - - Memory Functions - - -
 
-void* platformAllocateMemory(unsigned long long SIZE, bool8 ALIGNED);
+void* platformAllocateMemory(unsigned long long SIZE, bool ALIGNED);
 
-void platformFreeMemory(void* MEMORY, bool8 ALIGNED);
+void platformFreeMemory(void* MEMORY, bool ALIGNED);
 
 void* platformZeroMemory(void* MEMORY, unsigned long long SIZE);
 

@@ -21,8 +21,8 @@
 typedef struct applicationState
 {
     game* gameInstance;
-    bool8 isRunning;
-    bool8 isSuspended;
+    bool isRunning;
+    bool isSuspended;
     short width;
     short height;
     double lastTime;
@@ -56,15 +56,15 @@ static applicationState* appState;
 
 // - - - Event Handlers - - -
 
-bool8 applicationOnEvent(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT);
+bool applicationOnEvent(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT);
 
-bool8 applicationOnKey(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT);
+bool applicationOnKey(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT);
 
-bool8 applicationOnResize(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT);
+bool applicationOnResize(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT);
 
 
 // - - - Create Application
-bool8 createApplication(game* GAME)
+bool createApplication(game* GAME)
 {
     if (GAME->applicationState)
     {
@@ -139,7 +139,7 @@ bool8 createApplication(game* GAME)
 }
 
 // - - - Run Application
-bool8 runApplication()
+bool runApplication()
 {
     appState->isRunning = true;
     clockStart(&appState->clock);
@@ -191,7 +191,7 @@ bool8 runApplication()
             if (remainingSeconds > 0)
             {
                 unsigned long long remainingMiliseconds = (remainingSeconds * 1000);
-                bool8 limitFrames = false; //give time back to os
+                bool limitFrames = false; //give time back to os
                 if (remainingMiliseconds > 0 && limitFrames)
                 {
                     platformSleep(remainingMiliseconds - 1);
@@ -231,7 +231,7 @@ void applicationGetFrameBufferSize(unsigned int* WIDTH, unsigned int* HEIGHT)
 
 // - - - Event Handlers - - -
 
-bool8 applicationOnEvent(unsigned short CODE, void* SENDER, void* LISTENER, eventContext context)
+bool applicationOnEvent(unsigned short CODE, void* SENDER, void* LISTENER, eventContext context)
 {
     switch (CODE)
     {
@@ -247,7 +247,7 @@ bool8 applicationOnEvent(unsigned short CODE, void* SENDER, void* LISTENER, even
     return false;
 }
 
-bool8 applicationOnKey(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT)
+bool applicationOnKey(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT)
 {
     unsigned short keyCode;
     eventContext context = {};
@@ -281,7 +281,7 @@ bool8 applicationOnKey(unsigned short CODE, void* SENDER, void* LISTENER, eventC
 }
 
 
-bool8 applicationOnResize(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT)
+bool applicationOnResize(unsigned short CODE, void* SENDER, void* LISTENER, eventContext CONTEXT)
 {
     switch (CODE)
     {

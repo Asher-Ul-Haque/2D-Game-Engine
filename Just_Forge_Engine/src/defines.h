@@ -6,7 +6,7 @@
 
 // - - - Boolean Data Types
 typedef int bool32;
-typedef _Bool bool8;
+typedef _Bool bool;
 
 #define true 1
 #define false 0
@@ -21,7 +21,7 @@ typedef _Bool bool8;
 //Ensure all types are of the correct size
 // - - - Boolean
 STATIC_ASSERT(sizeof(bool32) == 4, "boolean32 is not 4 bytes");
-STATIC_ASSERT(sizeof(bool8) == 1, "boolean8 is not 1 byte");
+STATIC_ASSERT(sizeof(bool) == 1, "boolean8 is not 1 byte");
 
 // - - - Character
 STATIC_ASSERT(sizeof(char) == 1, "char is not 1 byte");

@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdlib.h> 
 
-static bool8 randomlySeeded = false;
+static bool randomlySeeded = false;
 
 /*
  * Note that these are here so no need to include <math.h> everywhre

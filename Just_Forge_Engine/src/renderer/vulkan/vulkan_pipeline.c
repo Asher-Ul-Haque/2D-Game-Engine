@@ -6,7 +6,7 @@
 
 #include "math/math_types.h"
 
-bool8 createGraphicsPipeline(
+bool createGraphicsPipeline(
     vulkanContext* CONTEXT,
     vulkanRenderpass* RENDERPASS,
     unsigned int ATTRIBUTE_COUNT,
@@ -17,7 +17,7 @@ bool8 createGraphicsPipeline(
     VkPipelineShaderStageCreateInfo* STAGES,
     VkViewport VIEWPORT,
     VkRect2D SCISSOR,
-    bool8 IS_WIREFRAME,
+    bool IS_WIREFRAME,
     vulkanPipeline* PIPELINE)
 {
     //Viewport state 

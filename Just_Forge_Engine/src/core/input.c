@@ -12,7 +12,7 @@
 // - - - Keyboard
 typedef struct keyBoardState
 {
-    bool8 keys[256];
+    bool keys[256];
 } keyBoardState;
 
 // - - - Mouse
@@ -76,7 +76,7 @@ void inputUpdate(double DELTA_TIME)
 // - - - Keyboard Functions - - -
 
 // - - - Key Functions
-bool8 inputIsKeyDown(keys KEY)
+bool inputIsKeyDown(keys KEY)
 {
     if (!statePtr)
     {
@@ -86,7 +86,7 @@ bool8 inputIsKeyDown(keys KEY)
     return statePtr->keyBoardCurrent.keys[KEY] == true;
 }
 
-bool8 inputIsKeyUp(keys KEY)
+bool inputIsKeyUp(keys KEY)
 {
     if (!statePtr)
     {
@@ -96,7 +96,7 @@ bool8 inputIsKeyUp(keys KEY)
     return statePtr->keyBoardCurrent.keys[KEY] == false;
 }
 
-bool8 inputWasKeyDown(keys KEY)
+bool inputWasKeyDown(keys KEY)
 {
     if (!statePtr)
     {
@@ -106,7 +106,7 @@ bool8 inputWasKeyDown(keys KEY)
     return statePtr->keyBoardPrevious.keys[KEY] == true;
 }
 
-bool8 inputWasKeyUp(keys KEY)
+bool inputWasKeyUp(keys KEY)
 {
     if (!statePtr)
     {
@@ -117,7 +117,7 @@ bool8 inputWasKeyUp(keys KEY)
 }
 
 // - - - Input Processing Functions
-void inputProcessKey(keys KEY, bool8 IS_DOWN)
+void inputProcessKey(keys KEY, bool IS_DOWN)
 {
     if (statePtr->keyBoardCurrent.keys[KEY] != IS_DOWN)
     {
@@ -133,7 +133,7 @@ void inputProcessKey(keys KEY, bool8 IS_DOWN)
 // - - - Mouse Functions - - -
 
 // - - - Button Functions
-bool8 inputIsButtonDown(buttons BUTTON)
+bool inputIsButtonDown(buttons BUTTON)
 {
     if (!statePtr)
     {
@@ -143,7 +143,7 @@ bool8 inputIsButtonDown(buttons BUTTON)
     return statePtr->mouseCurrent.buttons[BUTTON] == true;
 }
 
-bool8 inputIsButtonUp(buttons BUTTON)
+bool inputIsButtonUp(buttons BUTTON)
 {
     if (!statePtr)
     {
@@ -153,7 +153,7 @@ bool8 inputIsButtonUp(buttons BUTTON)
     return statePtr->mouseCurrent.buttons[BUTTON] == false;
 }
 
-bool8 inputWasButtonDown(buttons BUTTON)
+bool inputWasButtonDown(buttons BUTTON)
 {
     if (!statePtr)
     {
@@ -163,7 +163,7 @@ bool8 inputWasButtonDown(buttons BUTTON)
     return statePtr->mousePrevious.buttons[BUTTON] == true;
 }
 
-bool8 inputWasButtonUp(buttons BUTTON)
+bool inputWasButtonUp(buttons BUTTON)
 {
     if (!statePtr)
     {
@@ -200,7 +200,7 @@ void inputGetPreviousMousePosition(int *X, int *Y)
 }
 
 // - - - Input Processing Functions
-void inputProcessButton(buttons BUTTON, bool8 IS_DOWN)
+void inputProcessButton(buttons BUTTON, bool IS_DOWN)
 {
     if (statePtr->mouseCurrent.buttons[BUTTON] != IS_DOWN)
     {

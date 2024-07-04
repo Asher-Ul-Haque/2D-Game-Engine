@@ -4,13 +4,13 @@
 #include <core/event.h>
 #include <core/memory.h>
 
-bool8 gameInit(game* GAME)
+bool gameInit(game* GAME)
 {
     FORGE_LOG_INFO("Game initialised");
     return true;
 }
 
-bool8 gameUpdate(game* GAME, float DELTA_TIME)
+bool gameUpdate(game* GAME, float DELTA_TIME)
 {
     static unsigned long long allocCount = 0;
     unsigned long long prevAllocCount = allocCount;
@@ -27,7 +27,7 @@ bool8 gameUpdate(game* GAME, float DELTA_TIME)
     return true;
 }
 
-bool8 gameRender(game* GAME, float DELTA_TIME)
+bool gameRender(game* GAME, float DELTA_TIME)
 {
 //    FORGE_LOG_TRACE("Game rendered");
     return true;
