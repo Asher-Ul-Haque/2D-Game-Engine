@@ -1,29 +1,42 @@
+#pragma once
 #include "vulkan_types.h"
 
+void vulkanCommandBufferAllocate(
+    vulkanContext* CONTEXT,
+    VkCommandPool POOL,
+    bool IS_PRIMARY,
+    vulkanCommandBuffer* OUTPUT_COMMAND_BUFFER);
 
-// - - - | Command buffer functions | - - -
+void vulkanCommandBufferFree(
+    vulkanContext* CONTEXT,
+    VkCommandPool POOL,
+    vulkanCommandBuffer* COMMAND_BUFFER);
 
+void vulkanCommandBufferBegin(
+    vulkanCommandBuffer* COMMAND_BUFFER,
+    bool IS_SINGLE_USE,
+    bool IS_RENDERPASS_CONTINUE,
+    bool IS_SIMULTANEOUS_USE);
 
-// - - - Allocation - - -
+void vulkanCommandBufferEnd(vulkanCommandBuffer* COMMAND_BUFFER);
 
-void commandBufferAllocate(vulkanContext* CONTEXT, VkCommandPool COMMAND_POOL, bool IS_PRIMARY, vulkanCommandBuffer* COMMAND_BUFFER);
+void vulkanCommandBufferUpdateSubmitted(vulkanCommandBuffer* COMMAND_BUFFER);
 
-void commandBufferFree(vulkanContext* CONTEXT, VkCommandPool COMMAND_POOL, vulkanCommandBuffer* COMMAND_BUFFER);
+void vulkanCommandBufferReset(vulkanCommandBuffer* COMMAND_BUFFER);
 
+/**
+ * Allocates and begins recording to out_command_buffer.
+ */
+void vulkanCommandBufferAllocateAndBeginSingleUse(
+    vulkanContext* CONTEXT,
+    VkCommandPool POOL,
+    vulkanCommandBuffer* OUTPUT_COMMAND_BUFFER);
 
-// - - - Recording - - - 
-
-void commandBufferBegin(vulkanCommandBuffer* COMMAND_BUFFER, bool IS_SINGLE_USE, bool IS_SIMULTANEOUS_USE, bool IS_RENDERPASS_CONTINUE);
-
-void commandBufferEnd(vulkanCommandBuffer* COMMAND_BUFFER);
-
-void commandBufferUpdateSubmits(vulkanCommandBuffer* COMMAND_BUFFER);
-
-void commandBufferReset(vulkanCommandBuffer* COMMAND_BUFFER);
-
-
-// - - - Single use - - -
-
-void commandBufferBeginSingleUse(vulkanContext* CONTEXT, VkCommandPool POOL, vulkanCommandBuffer* COMMAND_BUFFER);
-
-void commandBufferEndSingleUse(vulkanContext* CONTEXT, VkCommandPool POOL, vulkanCommandBuffer* COMMAND_BUFFER, VkQueue QUEUE);
+/**
+ * Ends recording, submits to and waits for queue operation and frees the provided command buffer.
+ */
+void vulkanCommandBufferEndSingleUse(
+    vulkanContext* CONTEXT,
+    VkCommandPool POOL,
+    vulkanCommandBuffer* COMMAND_BUFFER,
+    VkQueue QUEUE);

@@ -2,18 +2,21 @@
 #include "vulkan_types.h"
 
 
-// - - - | Rendperass functions | - - - 
+// - - - Renderpass Functions - - -
 
+void vulkanRenderpassCreate(
+    vulkanContext* CONTEXT, 
+    vulkanRenderpass* OUTPUT_RENDERPASS,
+    float X, float Y, float W, float H,
+    float R, float G, float B, float A,
+    float DEPTH,
+    unsigned int STENCIL);
 
-// - - - Creation - - -
+void vulkanRenderpassDestroy(vulkanContext* CONTEXT, vulkanRenderpass* RENDERPASS);
 
-void createRenderpass(vulkanContext* CONTEXT, vulkanRenderpass* RENDERPASS, float X, float Y, float WIDTH, float HEIGHT, float CLEAR_COLOR[4], float DEPTH, unsigned int PENCIL);
+void vulkanRenderpassBegin(
+    vulkanCommandBuffer* COMMAND_BUFFER, 
+    vulkanRenderpass* RENDERPASS,
+    VkFramebuffer FRAME_BUFFER);
 
-void destroyRenderpass(vulkanContext* CONTEXT, vulkanRenderpass* RENDERPASS);
-
-
-// - - - Usage - - -
-
-void beginRenderpass(vulkanCommandBuffer* COMMAND_BUFFER, vulkanRenderpass* RENDERPASS, VkFramebuffer FRAMEBUFFER);
-
-void endRenderpass(vulkanCommandBuffer* COMMAND_BUFFER, vulkanRenderpass* RENDERPASS);
+void vulkanRenderpassEnd(vulkanCommandBuffer* COMMAND_BUFFER, vulkanRenderpass* RENDERPASS);

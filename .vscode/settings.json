@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "vulkan_types.h": "c",
+        "renderer_backend.h": "c",
+        "platform.h": "c",
+        "renderer_types.h": "c"
+    }
+}

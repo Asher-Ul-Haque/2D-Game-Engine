@@ -5,11 +5,10 @@
 #include "core/memory.h"
 
 
-// - - - | Renderer Frontend | - - -
+// - - - Rendering System - - - -
 
 
-// - - - Renderer Frontend Struct (Class)
-typedef struct rendererSystemState
+typedef struct rendererSystemState 
 {
     rendererBackend backend;
 } rendererSystemState;
@@ -17,83 +16,82 @@ typedef struct rendererSystemState
 static rendererSystemState* statePtr;
 
 
-// - - - Renderer Frontend Class Methods - - -
+// - - - Rendering Functions - - - 
 
-void rendererSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APPLICATION)
+bool rendererSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APP_NAME) 
 {
     *MEMORY_REQUIREMENT = sizeof(rendererSystemState);
-    if (STATE == 0)
+    if (STATE == 0) 
     {
-        return;
+        return true;
     }
-
     statePtr = STATE;
 
-    //TODO: make this configurable
-    rendererBackendCreate(RENDERER_VULKAN, &statePtr->backend);
-    statePtr->backend.frameNumber = 0;
+    // TODO: make this configurable.
+    createRendererBackend(RENDERER_BACKEND_TYPE_VULKAN, &statePtr->backend);
+    statePtr->backend.frame_number = 0;
 
-    if (!statePtr->backend.initialize(&statePtr->backend, APPLICATION))
+    if (!statePtr->backend.initialize(&statePtr->backend, APP_NAME)) 
     {
-        FORGE_LOG_FATAL("Renderer Backend Failed to Create!");
-        return;
+        FORGE_LOG_FATAL("Renderer backend failed to initialize. Shutting down.");
+        return false;
     }
 
-    FORGE_LOG_INFO("Renderer Backend Initialized");
-    return;
+    return true;
 }
 
-void rendererSystemShutdown(void* STATE)
+void rendererSystemShutdown(void* STATE) 
 {
-    if (statePtr)
+    if (statePtr) 
     {
         statePtr->backend.shutdown(&statePtr->backend);
     }
     statePtr = 0;
-    FORGE_LOG_INFO("Renderer Backend Shutdown");
 }
 
-bool rendererBeginFrame(float DELTA_TIME)
+bool rendererBeginFrame(float DELTA_TIME) 
 {
-    if (!statePtr)
+    if (!statePtr) 
     {
-        FORGE_LOG_WARNING("Renderer System not initialized");
         return false;
     }
     return statePtr->backend.beginFrame(&statePtr->backend, DELTA_TIME);
 }
 
-bool rendererEndFrame(float DELTA_TIME)
+bool rendererEndFrame(float DELTA_TIME) 
 {
-    if (!statePtr)
+    if (!statePtr) 
     {
-        FORGE_LOG_WARNING("Renderer System not initialized");
         return false;
     }
     bool result = statePtr->backend.endFrame(&statePtr->backend, DELTA_TIME);
-    ++statePtr->backend.frameNumber;
+    statePtr->backend.frame_number++;
     return result;
 }
 
-void rendererResized(unsigned short WIDTH, unsigned short HEIGHT)
+void rendererSystemResize(unsigned short WIDTH, unsigned short HEIGHT) 
 {
-    if (statePtr)
+    if (statePtr) 
     {
         statePtr->backend.resized(&statePtr->backend, WIDTH, HEIGHT);
-    }
+    } 
     else 
     {
-        FORGE_LOG_WARNING("Renderer Backend not initialized to accept resize event: %i %i", WIDTH, HEIGHT);
+        FORGE_LOG_WARNING("renderer backend does not exist to accept resize: %i %i", WIDTH, HEIGHT);
     }
 }
 
-bool rendererDrawFrame(rendererPacket *PACKET)
+bool rendererSystemDrawFrame(renderPacket* PACKET) 
 {
-    if (rendererBeginFrame(PACKET->deltaTime))
+    // If the begin frame returned successfully, mid-frame operations may continue.
+    if (rendererBeginFrame(PACKET->deltaTime)) 
     {
-        if (!rendererEndFrame(PACKET->deltaTime))
+        // End the frame. If this fails, it is likely unrecoverable.
+        bool result = rendererEndFrame(PACKET->deltaTime);
+
+        if (!result) 
         {
-            FORGE_LOG_ERROR("Failed to finish frame: %llu", statePtr->backend.frameNumber);
+            FORGE_LOG_ERROR("rendererEndFrame failed. Application shutting down...");
             return false;
         }
     }

@@ -2,10 +2,9 @@
 #include "renderer/vulkan/vulkan_types.h"
 #include "renderer/renderer_types.h"
 
+bool vulkanObjectShaderCreate(vulkanContext* CONTEXT, vulkanObjectShader* OUTPUT_SHADER);
 
-bool createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER);
-void destroyObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER);
+void vulkanObjectShaderDestroy(vulkanContext* CONTEXT, struct vulkanObjectShader* SHADER);
 
-void useObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER);
-
+void vulkanObjectShaderUse(vulkanContext* CONTEXT, struct vulkanObjectShader* SHADER);
 

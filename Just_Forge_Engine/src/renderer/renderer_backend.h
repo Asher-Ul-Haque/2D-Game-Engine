@@ -1,12 +1,10 @@
 #pragma once
 #include "renderer_types.h"
 
+struct platformState;
 
-// - - - | Renderer Backend | - - -
 
+// - - - Backend Functions - - -
 
-// - - - Renderer Backend Functions - - - 
-
-bool rendererBackendCreate(rendererBackendType TYPE, rendererBackend* BACKEND);
-
-void rendererBackendDestroy(rendererBackend* BACKEND);
+bool createRendererBackend(rendererBackendType TYPE, rendererBackend* OUTPUT_BACKEND);
+void destroyRendererBackend(rendererBackend* BACKEND);

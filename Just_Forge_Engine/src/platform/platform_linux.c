@@ -781,13 +781,13 @@ keys translateKeycode(unsigned int X_KEYCODE)
 
 // - - - Vulkan Functions - - -
 
-void platformGetRequiredExtensions(const char*** EXTENSIONS)
+void platformGetRequiredExtensionNames(const char*** EXTENSIONS)
 {
     listAppend(*EXTENSIONS, &"VK_KHR_xcb_surface");
 }
 
 // - - - Surface creation for Vulkan
-bool platformCreateSurface(vulkanContext* CONTEXT)
+bool platformCreateVulkanSurface(vulkanContext* CONTEXT)
 {
     if (!statePtr)
     {

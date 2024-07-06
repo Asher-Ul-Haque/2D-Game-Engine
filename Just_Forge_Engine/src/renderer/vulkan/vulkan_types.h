@@ -1,22 +1,21 @@
 #pragma once
+
 #include "defines.h"
 #include "core/asserts.h"
+
 #include <vulkan/vulkan.h>
-#include <vulkan/vulkan_core.h>
 
-
-// - - - Assert on Vulkan check
-#define VK_CHECK(EXPRESSION) \
-    { \
-        FORGE_ASSERT(EXPRESSION == VK_SUCCESS); \
+// Checks the given expression's return value against VK_SUCCESS.
+#define VK_CHECK(expr)               \
+    {                                \
+        FORGE_ASSERT(expr == VK_SUCCESS); \
     }
 
 
-// - - - | Structs | - - -
 
+// - - - All fucking types needed for rendering - - -
 
-// - - - Vulkan Buffers
-typedef struct vulkanBuffer
+typedef struct vulkanBuffer 
 {
     unsigned long long totalSize;
     VkBuffer handle;
@@ -27,51 +26,26 @@ typedef struct vulkanBuffer
     unsigned int memoryPropertyFlags;
 } vulkanBuffer;
 
-// - - - Vulkan Swapchain Support Info
-typedef struct vulkanSwapchainSupportInfo
+typedef struct vulkanSwapchainSupportInfo 
 {
     VkSurfaceCapabilitiesKHR capabilities;
     unsigned int formatCount;
     VkSurfaceFormatKHR* formats;
     unsigned int presentModeCount;
     VkPresentModeKHR* presentModes;
-} vulkanSwapchainSupportInfo; 
+} vulkanSwapchainSupportInfo;
 
-// - - - Vulkan Command buffer - - -
-
-// - - - Vulkan Command buffer States
-typedef enum vulkanCommandBufferState
-{
-    COMMAND_BUFFER_STATE_READY, // Command buffer is ready to be recorded
-    COMMAND_BUFFER_STATE_RECORDING, // Command buffer is currently being recorded
-    COMMAND_BUFFER_STATE_IN_RENDERPASS, // Command buffer is currently in a renderpass
-    COMMAND_BUFFER_STATE_FINISHED, // Command buffer has been recorded and is ready to be submitted
-    COMMAND_BUFFER_STATE_SUBMITTED, // Command buffer has been submitted to the GPU
-    COMMAND_BUFFER_STATE_NONE // Command buffer is not in a valid state
-} vulkanCommandBufferState; 
-
-// - - - Vulkan Command buffer
-typedef struct vulkanCommandBuffer
-{
-    VkCommandBuffer handle;
-    vulkanCommandBufferState state;
-} vulkanCommandBuffer;
-
-// - - - Vulkan Device
-typedef struct vulkanDevice
+typedef struct vulkanDevice 
 {
     VkPhysicalDevice physicalDevice;
     VkDevice logicalDevice;
     vulkanSwapchainSupportInfo swapchainSupport;
-
     int graphicsQueueIndex;
     int presentQueueIndex;
-    int computeQueueIndex;
     int transferQueueIndex;
 
     VkQueue graphicsQueue;
     VkQueue presentQueue;
-    VkQueue computeQueue;
     VkQueue transferQueue;
 
     VkCommandPool graphicsCommandPool;
@@ -83,8 +57,7 @@ typedef struct vulkanDevice
     VkFormat depthFormat;
 } vulkanDevice;
 
-// - - - Vulkan Image
-typedef struct vulkanImage
+typedef struct vulkanImage 
 {
     VkImage handle;
     VkDeviceMemory memory;
@@ -93,113 +66,153 @@ typedef struct vulkanImage
     unsigned int height;
 } vulkanImage;
 
-
-// - - - Vulkan Renderpass - - - 
-
-// - - - Vulkan Renderpass States
-typedef enum vulkanRenderpassState
+typedef enum vulkanRenderPassState 
 {
-    RENDERPASS_STATE_READY, // Renderpass is ready to be recorded
-    RENDERPASS_STATE_RECORDING, // Renderpass is currently being recorded
-    RENDERPASS_STATE_FINISHED, // Renderpass has been recorded and is ready to be submitted
-    RENDERPASS_STATE_SUBMITTED, // Renderpass has been submitted to the GPU
-    RENDERPASS_STATE_NONE // Renderpass is not in a valid state
-} vulkanRenderpassState;
+    READY,
+    RECORDING,
+    IN_RENDER_PASS,
+    RECORDING_ENDED,
+    SUBMITTED,
+    NOT_ALLOCATED
+} vulkanRenderPassState;
 
-// - - - Vulkan Renderpass
-typedef struct vulkanRenderpass
+typedef struct vulkanRenderpass 
 {
     VkRenderPass handle;
-    float x, y, width, height;
-    float clearColor[4];
+    float x, y, w, h;
+    float r, g, b, a;
+
     float depth;
-    unsigned int pencil;
-    vulkanRenderpassState state;
+    unsigned int stencil;
+
+    vulkanRenderPassState state;
 } vulkanRenderpass;
 
-// - - - Vulkan Framebuffer
-typedef struct vulkanFramebuffer
+typedef struct vulkanFramebuffer 
 {
     VkFramebuffer handle;
-    unsigned int attachmentCount;
+    unsigned int attachment_count;
     VkImageView* attachments;
     vulkanRenderpass* renderpass;
 } vulkanFramebuffer;
 
-// - - - Vulkan Swapchain
-typedef struct vulkanSwapchain 
-{
-    VkSurfaceFormatKHR imageFormat; // Vulkan requires us to know the format of the images in the swapchain
-    unsigned char maxFramesInFlight; // Maximum number of images in the swapchain
+typedef struct vulkanSwapchain {
+    VkSurfaceFormatKHR imageFormat;
+    unsigned char maxFramesInFlight;
     VkSwapchainKHR handle;
-    VkImage* images;
     unsigned int imageCount;
-    VkImageView* imageViews; // Image views are required to use the images in the swapchain. Image views describe how to access an image and which part of the image to access
+    VkImage* images;
+    VkImageView* views;
+
     vulkanImage depthAttachment;
+
+    // framebuffers used for on-screen rendering.
     vulkanFramebuffer* framebuffers;
 } vulkanSwapchain;
 
-// - - - Vulkan Fence
-typedef struct vulkanFence
+typedef enum vulkanCommandBufferState 
+{
+    COMMAND_BUFFER_STATE_READY,
+    COMMAND_BUFFER_STATE_RECORDING,
+    COMMAND_BUFFER_STATE_IN_RENDER_PASS,
+    COMMAND_BUFFER_STATE_RECORDING_ENDED,
+    COMMAND_BUFFER_STATE_SUBMITTED,
+    COMMAND_BUFFER_STATE_NOT_ALLOCATED
+} vulkanCommandBufferState;
+
+typedef struct vulkanCommandBuffer 
+{
+    VkCommandBuffer handle;
+
+    // Command buffer state.
+    vulkanCommandBufferState state;
+} vulkanCommandBuffer;
+
+typedef struct vulkanFence 
 {
     VkFence handle;
     bool isSignaled;
 } vulkanFence;
 
-// - - - Vulkan Pipleline
-typedef struct vulkanPipeline
-{
-    VkPipeline handle;
-    VkPipelineLayout layout;
-} vulkanPipeline;
-
-// - - - Vulkan Shaders - - -
-
-#define OBJECT_SHADER_STAGE_COUNT 2 //vertex and fragment
-
-// - - - Shader stages
-typedef struct vulkanShaderStage
+typedef struct vulkanShaderStage 
 {
     VkShaderModuleCreateInfo createInfo;
     VkShaderModule handle;
-    VkPipelineShaderStageCreateInfo stageCreateInfo;
+    VkPipelineShaderStageCreateInfo shaderStageCreateInfo;
 } vulkanShaderStage;
 
-// - - - Object Shader
-typedef struct vulkanObjectShader
+typedef struct vulkanPipeline 
 {
+    VkPipeline handle;
+    VkPipelineLayout pipelineLayout;
+} vulkanPipeline;
+
+#define OBJECT_SHADER_STAGE_COUNT 2
+typedef struct vulkanObjectShader 
+{
+    // vertex, fragment
     vulkanShaderStage stages[OBJECT_SHADER_STAGE_COUNT];
     vulkanPipeline pipeline;
 } vulkanObjectShader;
 
-
-// - - - Vulkan Context - - -
-
-typedef struct vulkanContext
+typedef struct vulkanContext 
 {
-    unsigned int framebufferHeight;
+
+    // The framebuffer's current width.
     unsigned int framebufferWidth;
+
+    // The framebuffer's current height.
+    unsigned int framebufferHeight;
+
+    // Current generation of framebuffer size. If it does not match framebuffer_size_last_generation,
+    // a new one should be generated.
+    unsigned long long framebufferSizeGeneration;
+
+    // The generation of the framebuffer when it was last created. Set to framebuffer_size_generation
+    // when updated.
+    unsigned long long framebufferSizeLastGeneration;
+
     VkInstance instance;
     VkAllocationCallbacks* allocator;
     VkSurfaceKHR surface;
+
+#if defined(_DEBUG)
+    VkDebugUtilsMessengerEXT debugMessenger;
+#endif
+
     vulkanDevice device;
+
     vulkanSwapchain swapchain;
     vulkanRenderpass mainRenderpass;
+
+    vulkanBuffer objectVertexBuffer;
+    vulkanBuffer objectIndexBuffer;
+
+    // list
+    vulkanCommandBuffer* graphicsCommandBUffers;
+
+    // list
+    VkSemaphore* imageAvailableSemaphores;
+
+    // list
+    VkSemaphore* queueCompleteSemaphores;
+
+    unsigned int inFlightFenceCount;
+    vulkanFence* inFlightFences;
+
+    // Holds pointers to fences which exist and are owned elsewhere.
+    vulkanFence** imagesInFlight;
+
     unsigned int imageIndex;
     unsigned int currentFrame;
-    vulkanCommandBuffer* graphicsCommandBuffers;
 
-    bool recreateSwapchain;
-    int (*findMemoryIndex)(unsigned int TYPE_FILTER, unsigned int PROPERTY_FLAGS);
-    VkSemaphore* imageAvailableSemaphores;
-    VkSemaphore* renderFinishedSemaphores;
-    unsigned int inFlightFencesCount;
-    vulkanFence* inFlightFences;
-    vulkanFence** imagesInFlight;
-    unsigned long long framebufferSizeGeneration;
-    unsigned long long framebufferSizeLastGeneration;
+    bool recreatingSwapchain;
+
     vulkanObjectShader objectShader;
-    #if defined(_DEBUG)
-        VkDebugUtilsMessengerEXT debugMessenger;
-    #endif
+
+    unsigned long long geometryVertexOffset;
+    unsigned long long geometryIndexOffset;
+
+    int (*findMemoryIndex)(unsigned int TYPE_FILTER, unsigned int PROPERTY_FLAGS);
+
 } vulkanContext;

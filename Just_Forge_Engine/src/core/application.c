@@ -179,9 +179,9 @@ bool runApplication()
             }
 
             // TODO: refctor packet creation
-            rendererPacket packet;
+            renderPacket packet;
             packet.deltaTime = deltaTime;
-            rendererDrawFrame(&packet);  
+            rendererSystemDrawFrame(&packet);  
 
             double frameEndTime = platformGetTime();
             double frameElapsedTime = frameEndTime - frameStartTime;
@@ -312,7 +312,7 @@ bool applicationOnResize(unsigned short CODE, void* SENDER, void* LISTENER, even
                         appState->isSuspended = false;
                     }
                     appState->gameInstance->onResize(appState->gameInstance, width, height);
-                    rendererResized(width, height);
+                    rendererSystemResize(width, height);
                 }
             }
         }

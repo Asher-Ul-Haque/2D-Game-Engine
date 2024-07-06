@@ -2,15 +2,12 @@
 #include "renderer_types.h"
 
 
-// - - - | Renderer Frontend | - - -
+// - - - | Renderere Frontend Functions | - - -
 
 
-// - - - Renderer Frontend Struct (Class) - - -
-
-void rendererSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APPLICATION);
-
+bool rendererSystemInitialize(unsigned long long* MEMORY_REQUIREMENT, void* STATE, const char* APP_NAME);
 void rendererSystemShutdown(void* STATE);
 
-void rendererResized(unsigned short WIDTH, unsigned short HEIGHT);
+void rendererSystemResize(unsigned short WIDTH, unsigned short HEIGHT);
 
-bool rendererDrawFrame(rendererPacket* PACKET);
+bool rendererSystemDrawFrame(renderPacket* PACKET);

@@ -1,12 +1,37 @@
 #pragma once
-#include "vulkan_types.h"  
+#include "vulkan_types.h"
 
-void createVulkanSwapchain(vulkanContext* CONTEXT, unsigned int WIDTH, unsigned int HEIGHT, vulkanSwapchain* SWAPCHAIN);
 
-void recreateVulkanSwapchain(vulkanContext* CONTEXT, unsigned int WIDTH, unsigned int HEIGHT, vulkanSwapchain* SWAPCHAIN);
+// - - - Swapchain Functions - - - 
 
-void destroyVulkanSwapchain(vulkanContext* CONTEXT, vulkanSwapchain* SWAPCHAIN);
+void vulkanSwapchainCreate(
+    vulkanContext* CONTEXT,
+    unsigned int WIDTH,
+    unsigned int height,
+    vulkanSwapchain* OUTPUT_SWAPCHAIN);
 
-bool vulkanSwapchainAquireNextImageIndex(vulkanContext* CONTEXT, vulkanSwapchain* SWAPCHAIN, unsigned long long TIMEOUT, VkSemaphore IMAGE_AVAILABLE_SEMAPHORE, VkFence FENCE, unsigned int* IMAGE_INDEX);
+void vulkanSwapchainRecreate(
+    vulkanContext* CONTEXT,
+    unsigned int WIDTH,
+    unsigned int HEIGHT,
+    vulkanSwapchain* SWAPCHAIN);
 
-void vulkanSwapchainPresentImage(vulkanContext* CONTEXT, vulkanSwapchain* SWAPCHAIN, VkQueue GRAPHICS_QUEUE, VkQueue PRESENT_QUEUE, VkSemaphore RENDER_FINISHED_SEMAPHORE, unsigned int IMAGE_INDEX);
+void vulkanSwapchainDestroy(
+    vulkanContext* CONTEXT,
+    vulkanSwapchain* SWAPCHAIN);
+
+bool vulkanSwapchainAcquireNextImageIndex(
+    vulkanContext* CONTEXT,
+    vulkanSwapchain* SWAPCHAIN,
+    unsigned long long TIMEOUT,
+    VkSemaphore IMAGE_AVAILABLE_SEMAPHORES,
+    VkFence FENCE,
+    unsigned int* OUTPUT_IMAGE_INDEX);
+
+void vulkanSwapchainPresent(
+    vulkanContext* CONTEXT,
+    vulkanSwapchain* SWAPCHAIN,
+    VkQueue GRAPHICS_QUEUE,
+    VkQueue PRESENT_QUEUE,
+    VkSemaphore RENDERER_COMPLETE_SEMAPHORE,
+    unsigned int PRESENT_IMAGE_INDEX);

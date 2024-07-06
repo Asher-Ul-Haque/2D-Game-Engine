@@ -1,42 +1,33 @@
-#pragma once 
+#pragma once
 #include "defines.h"
 
 
-// - - - | Renderer Structs | - - -
+// - - - | Renderer Backends | - - -
 
-
-// - - - Types of Graphics API
-typedef enum rendererBackendType
+// - - - Types
+typedef enum rendererBackendType 
 {
-    RENDERER_OPENGL,
-    RENDERER_DIRECTX,
-    RENDERER_VULKAN,
-    RENDERER_METAL,
-    RENDERER_NULL
+    RENDERER_BACKEND_TYPE_VULKAN,
+    RENDERER_BACKEND_TYPE_OPENGL,
+    RENDERER_BACKEND_TYPE_DIRECTX
 } rendererBackendType;
 
+// - - - Backend
+typedef struct rendererBackend {
+    unsigned long long frame_number;
 
-// - - - Renderer Backend Struct (Class) - - -
-
-typedef struct rendererBackend 
-{
-    unsigned long long frameNumber;
-
-    bool (*initialize)(struct rendererBackend* BACKEND, const char* APPLICATION);
+    bool (*initialize)(struct rendererBackend* BACKEND, const char* APP_NAME);
 
     void (*shutdown)(struct rendererBackend* BACKEND);
 
     void (*resized)(struct rendererBackend* BACKEND, unsigned short WIDTH, unsigned short HEIGHT);
 
     bool (*beginFrame)(struct rendererBackend* BACKEND, float DELTA_TIME);
-
-    bool (*endFrame)(struct rendererBackend* BACKEND, float DELTA_TIME);
-    
+    bool (*endFrame)(struct rendererBackend* BACKEND, float DELTA_TIME);    
 } rendererBackend;
 
-
-// - - - Renderer Packet Struct 
-typedef struct rendererPacket
+// - - - Packets
+typedef struct renderPacket 
 {
     float deltaTime;
-} rendererPacket;
+} renderPacket;

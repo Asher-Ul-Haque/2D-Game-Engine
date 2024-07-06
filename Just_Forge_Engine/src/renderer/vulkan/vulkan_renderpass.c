@@ -1,57 +1,57 @@
 #include "vulkan_renderpass.h"
-#include <vulkan/vulkan_core.h>
-#include "core/logger.h"
 #include "core/memory.h"
-#include "vulkan_types.h"
 
-
-// - - - | Rendperass functions | - - -
-
-
-// - - - Creation - - -
-
-void createRenderpass(vulkanContext* CONTEXT, vulkanRenderpass* RENDERPASS, float X, float Y, float WIDTH, float HEIGHT, float CLEAR_COLOR[4], float DEPTH, unsigned int PENCIL)
+void vulkanRenderpassCreate(
+    vulkanContext* CONTEXT, 
+    vulkanRenderpass* OUTPUT_RENDERPASS,
+    float X, float Y, float W, float H,
+    float R, float G, float B, float A,
+    float DEPTH,
+    unsigned int STENCIL) 
 {
-    RENDERPASS->x = X;
-    RENDERPASS->y = Y;
-    RENDERPASS->width = WIDTH;
-    RENDERPASS->height = HEIGHT;
-    RENDERPASS->clearColor[0] = CLEAR_COLOR[0];
-    RENDERPASS->clearColor[1] = CLEAR_COLOR[1];
-    RENDERPASS->clearColor[2] = CLEAR_COLOR[2];
-    RENDERPASS->clearColor[3] = CLEAR_COLOR[3];
-    RENDERPASS->depth = DEPTH;
-    RENDERPASS->pencil = PENCIL;
-    RENDERPASS->state = RENDERPASS_STATE_READY;
+    OUTPUT_RENDERPASS->x = X;
+    OUTPUT_RENDERPASS->y = Y;
+    OUTPUT_RENDERPASS->w = W;
+    OUTPUT_RENDERPASS->h = H;
 
-    //Main subpasss
+    OUTPUT_RENDERPASS->r = R;
+    OUTPUT_RENDERPASS->g = G;
+    OUTPUT_RENDERPASS->b = B;
+    OUTPUT_RENDERPASS->a = A;
+
+    OUTPUT_RENDERPASS->depth = DEPTH;
+    OUTPUT_RENDERPASS->stencil = STENCIL;
+
+    // Main subpass
     VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
-    //Attachements: TODO: make configurable
-    unsigned int attachementCount = 2;
-    VkAttachmentDescription attachements[2];
+    // Attachments TODO: make this configurable.
+    const unsigned int attachmentDescriptionCount = 2;
+    VkAttachmentDescription attachmentDescriptions[attachmentDescriptionCount];
 
-    //Color attachement : TODO: make configurable
-    VkAttachmentDescription colorAttachement;
-    colorAttachement.format = CONTEXT->swapchain.imageFormat.format;
-    colorAttachement.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachement.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachement.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachement.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachement.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachement.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachement.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    colorAttachement.flags = 0;
-    attachements[0] = colorAttachement;
-    
-    VkAttachmentReference colorAttachementRef = {};
-    colorAttachementRef.attachment = 0;
-    colorAttachementRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    // Color attachment
+    VkAttachmentDescription colorAttachment;
+    colorAttachment.format = CONTEXT->swapchain.imageFormat.format;  // TODO: configurable
+    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;      // Do not expect any particular layout before render pass starts.
+    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;  // Transitioned to after the render pass
+    colorAttachment.flags = 0;
+
+    attachmentDescriptions[0] = colorAttachment;
+
+    VkAttachmentReference colorAttachmentReference;
+    colorAttachmentReference.attachment = 0;  // Attachment description array index
+    colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
     subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &colorAttachementRef;
+    subpass.pColorAttachments = &colorAttachmentReference;
 
-    //Depth attachment, if needed
+    // Depth attachment, if there is one
     VkAttachmentDescription depthAttachment = {};
     depthAttachment.format = CONTEXT->device.depthFormat;
     depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -61,94 +61,97 @@ void createRenderpass(vulkanContext* CONTEXT, vulkanRenderpass* RENDERPASS, floa
     depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    attachements[1] = depthAttachment;
 
-    VkAttachmentReference depthAttachementRef = {};
-    depthAttachementRef.attachment = 1;
-    depthAttachementRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    subpass.pDepthStencilAttachment = &depthAttachementRef;
-    
-    // TODO: other attachements : input, resolve, preserve
+    attachmentDescriptions[1] = depthAttachment;
 
-    // Depth stencil
-    subpass.pDepthStencilAttachment = &depthAttachementRef;
+    // Depth attachment reference
+    VkAttachmentReference depthAttachmentReference;
+    depthAttachmentReference.attachment = 1;
+    depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    // Shader input
+    // TODO: other attachment types (input, resolve, preserve)
+
+    // Depth stencil data.
+    subpass.pDepthStencilAttachment = &depthAttachmentReference;
+
+    // Input from a shader
     subpass.inputAttachmentCount = 0;
     subpass.pInputAttachments = 0;
 
-    // Attachments used for multisampling color attachments
+    // Attachments used for multisampling colour attachments
+    subpass.pResolveAttachments = 0;
+
+    // Attachments not used in this subpass, but must be preserved for the next.
     subpass.preserveAttachmentCount = 0;
     subpass.pPreserveAttachments = 0;
 
-    //Renderpass dependencies TODO: make configurable
-    VkSubpassDependency dependencies;
-    dependencies.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies.dstSubpass = 0;
-    dependencies.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies.srcAccessMask = 0;
-    dependencies.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
-    dependencies.dependencyFlags = 0;
+    // Render pass dependencies. TODO: make this configurable.
+    VkSubpassDependency dependency;
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    dependency.dependencyFlags = 0;
 
+    // Render pass create.
+    VkRenderPassCreateInfo renderPassCreateInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO};
+    renderPassCreateInfo.attachmentCount = attachmentDescriptionCount;
+    renderPassCreateInfo.pAttachments = attachmentDescriptions;
+    renderPassCreateInfo.subpassCount = 1;
+    renderPassCreateInfo.pSubpasses = &subpass;
+    renderPassCreateInfo.dependencyCount = 1;
+    renderPassCreateInfo.pDependencies = &dependency;
+    renderPassCreateInfo.pNext = 0;
+    renderPassCreateInfo.flags = 0;
 
-    //Render pass create info
-    VkRenderPassCreateInfo renderpassInfo = {};
-    renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderpassInfo.attachmentCount = attachementCount;
-    renderpassInfo.pAttachments = attachements;
-    renderpassInfo.subpassCount = 1;
-    renderpassInfo.pSubpasses = &subpass;
-    renderpassInfo.dependencyCount = 1;
-    renderpassInfo.pDependencies = &dependencies;
-    renderpassInfo.pNext = 0;
-    renderpassInfo.flags = 0;
-
-    VK_CHECK(vkCreateRenderPass(CONTEXT->device.logicalDevice, &renderpassInfo, 0, &RENDERPASS->handle));
-    FORGE_LOG_INFO("Renderpass created");
+    VK_CHECK(vkCreateRenderPass(
+        CONTEXT->device.logicalDevice,
+        &renderPassCreateInfo,
+        CONTEXT->allocator,
+        &OUTPUT_RENDERPASS->handle));
 }
 
-void destroyRenderpass(vulkanContext* CONTEXT, vulkanRenderpass* RENDERPASS)
+void vulkanRenderpassDestroy(vulkanContext* CONTEXT, vulkanRenderpass* RENDERPASS)
 {
-    if (RENDERPASS && RENDERPASS->handle)
+    if (RENDERPASS && RENDERPASS->handle) 
     {
-        vkDestroyRenderPass(CONTEXT->device.logicalDevice, RENDERPASS->handle, 0);
+        vkDestroyRenderPass(CONTEXT->device.logicalDevice, RENDERPASS->handle, CONTEXT->allocator);
         RENDERPASS->handle = 0;
-        FORGE_LOG_INFO("Renderpass destroyed");
     }
 }
 
-
-// - - - Usage - - -
-
-void beginRenderpass(vulkanCommandBuffer* COMMAND_BUFFER, vulkanRenderpass* RENDERPASS, VkFramebuffer FRAMEBUFFER)
+void vulkanRenderpassBegin(
+    vulkanCommandBuffer* COMMAND_BUFFER,
+    vulkanRenderpass* RENDERPASS,
+    VkFramebuffer FRAME_BUFFER) 
 {
-    VkRenderPassBeginInfo renderPassInfo = {};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = RENDERPASS->handle;
-    renderPassInfo.framebuffer = FRAMEBUFFER;
-    renderPassInfo.renderArea.offset.x = RENDERPASS->x;
-    renderPassInfo.renderArea.offset.y = RENDERPASS->y;
-    renderPassInfo.renderArea.extent.width = RENDERPASS->width;
-    renderPassInfo.renderArea.extent.height = RENDERPASS->height;
+    VkRenderPassBeginInfo beginInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+    beginInfo.renderPass = RENDERPASS->handle;
+    beginInfo.framebuffer = FRAME_BUFFER;
+    beginInfo.renderArea.offset.x = RENDERPASS->x;
+    beginInfo.renderArea.offset.y = RENDERPASS->y;
+    beginInfo.renderArea.extent.width = RENDERPASS->w;
+    beginInfo.renderArea.extent.height = RENDERPASS->h;
 
     VkClearValue clearValues[2];
     forgeZeroMemory(clearValues, sizeof(VkClearValue) * 2);
-    clearValues[0].color.float32[0] = RENDERPASS->clearColor[0];
-    clearValues[0].color.float32[1] = RENDERPASS->clearColor[1];
-    clearValues[0].color.float32[2] = RENDERPASS->clearColor[2];
-    clearValues[0].color.float32[3] = RENDERPASS->clearColor[3];
+    clearValues[0].color.float32[0] = RENDERPASS->r;
+    clearValues[0].color.float32[1] = RENDERPASS->g;
+    clearValues[0].color.float32[2] = RENDERPASS->b;
+    clearValues[0].color.float32[3] = RENDERPASS->a;
     clearValues[1].depthStencil.depth = RENDERPASS->depth;
-    clearValues[1].depthStencil.stencil = RENDERPASS->pencil;
+    clearValues[1].depthStencil.stencil = RENDERPASS->stencil;
 
-    renderPassInfo.clearValueCount = 2;
-    renderPassInfo.pClearValues = clearValues;
+    beginInfo.clearValueCount = 2;
+    beginInfo.pClearValues = clearValues;
 
-    vkCmdBeginRenderPass(COMMAND_BUFFER->handle, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    COMMAND_BUFFER->state = COMMAND_BUFFER_STATE_IN_RENDERPASS;
+    vkCmdBeginRenderPass(COMMAND_BUFFER->handle, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    COMMAND_BUFFER->state = COMMAND_BUFFER_STATE_IN_RENDER_PASS;
 }
 
-void endRenderpass(vulkanCommandBuffer* COMMAND_BUFFER, vulkanRenderpass* RENDERPASS)
+void vulkanRenderpassEnd(vulkanCommandBuffer* COMMAND_BUFFER, vulkanRenderpass* RENDERPASS) 
 {
     vkCmdEndRenderPass(COMMAND_BUFFER->handle);
     COMMAND_BUFFER->state = COMMAND_BUFFER_STATE_RECORDING;

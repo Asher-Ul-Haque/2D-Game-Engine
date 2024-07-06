@@ -1,8 +1,7 @@
 #pragma once
 #include "vulkan_types.h"
-#include <vulkan/vulkan_core.h>
 
-bool createGraphicsPipeline(
+bool vulkanGraphicsPipelineCreate(
     vulkanContext* CONTEXT,
     vulkanRenderpass* RENDERPASS,
     unsigned int ATTRIBUTE_COUNT,
@@ -14,8 +13,8 @@ bool createGraphicsPipeline(
     VkViewport VIEWPORT,
     VkRect2D SCISSOR,
     bool IS_WIREFRAME,
-    vulkanPipeline* PIPELINE);
+    vulkanPipeline* OUTPUT_PIPELINE);
 
-void destroyGraphicsPipeline(vulkanContext* CONTEXT, vulkanPipeline* PIPELINE);
+void vulkanPipelineDestroy(vulkanContext* CONTEXT, vulkanPipeline* PIPELINE);
 
-void bindGraphicsPipeline(vulkanCommandBuffer* COMMAND_BUFFER, VkPipelineBindPoint BIND_POINT, vulkanPipeline* PIPELINE);
+void vulkanPipelineBind(vulkanCommandBuffer* COMMAND_BUFFER, VkPipelineBindPoint BIND_POINT, vulkanPipeline* PIPELINE);

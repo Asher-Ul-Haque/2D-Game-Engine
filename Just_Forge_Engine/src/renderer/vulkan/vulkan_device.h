@@ -1,13 +1,13 @@
 #pragma once
 #include "vulkan_types.h"
 
+bool vulkanDeviceCreate(vulkanContext* CONTEXT);
 
-// - - - | Vulkan Device Functions | - - -
+void vulkanDeviceDestroy(vulkanContext* CONTEXT);
 
-bool createVulkanDevice(vulkanContext* CONTEXT);
-
-void destroyVulkanDevice(vulkanContext* CONTEXT);
-
-bool vulkanDeviceQuerySwapchainSupport(VkPhysicalDevice GPU, VkSurfaceKHR SURFACE, vulkanSwapchainSupportInfo* INFO);
+void vulkanDeviceQuerySwapchainSupport(
+    VkPhysicalDevice PHYSICAL_DEVICE,
+    VkSurfaceKHR SURFACE,
+    vulkanSwapchainSupportInfo* OUTPUT_SUPPORT_INFO);
 
 bool vulkanDeviceDetectDepthFormat(vulkanDevice* DEVICE);
