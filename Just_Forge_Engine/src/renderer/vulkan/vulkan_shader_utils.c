@@ -4,7 +4,12 @@
 #include "platform/filesystem.h"
 #include <stdio.h>
 
-bool createShaderModule(vulkanContext* CONTEXT, const char* NAME, const char* TYPE_STRING, VkShaderStageFlagBits SHADER_STAGE_FLAG, unsigned int STAGE_INDEX, vulkanShaderStage* SHADER_STAGES)
+bool createShaderModule(vulkanContext* CONTEXT, 
+                        const char* NAME, 
+                        const char* TYPE_STRING, 
+                        VkShaderStageFlagBits SHADER_STAGE_FLAG, 
+                        unsigned int STAGE_INDEX, 
+                        vulkanShaderStage* SHADER_STAGES)
 {
     char fileName[512];
     sprintf(fileName, "Assets/shaders/%s.%s.spv", NAME, TYPE_STRING);

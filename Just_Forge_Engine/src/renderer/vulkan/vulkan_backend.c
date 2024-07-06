@@ -9,19 +9,22 @@
 #include "vulkan_frame_buffer.h"
 #include "vulkan_fence.h"
 #include "vulkan_utils.h"
+#include "vulkan_buffer.h"
 
 #include "core/logger.h"
 #include "core/memory.h"
+#include <string.h>
+#include <stdlib.h>
+#include <vulkan/vulkan_core.h>
 #include "core/application.h"
 
 #include "dataStructures/list.h"
+#include "math/math_types.h"
 
 #include "platform/platform.h"
 
 #include "shaders/vulkan_object_shader.h"
 
-#include <string.h>
-#include <stdlib.h>
 // - - - | Vulkan Setup | - - -
 
 
@@ -31,7 +34,11 @@ static unsigned int frameBufferWidth = 0;
 static unsigned int frameBufferHeight = 0;
 
 // - - - Debug Callback
-VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT MESSAGE_SEVERITY, VkDebugUtilsMessageTypeFlagsEXT MESSAGE_TYPES, const VkDebugUtilsMessengerCallbackDataEXT* CALLBACK_DATA, void* USER_DATA);
+VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT MESSAGE_SEVERITY, 
+    VkDebugUtilsMessageTypeFlagsEXT MESSAGE_TYPES, 
+    const VkDebugUtilsMessengerCallbackDataEXT* CALLBACK_DATA, 
+    void* USER_DATA);
 
 // - - - Command Buffer Creation
 void createCommandBuffers(rendererBackend* BACKEND);
@@ -47,6 +54,31 @@ bool recreateSwapchain(rendererBackend* BACKEND);
 
 // - - - Create Buffers
 bool createBuffers(vulkanContext* CONTEXT);
+
+// - - - Data Upload
+void uploadDataRange(vulkanContext* CONTEXT, 
+                     VkCommandPool POOL, 
+                     VkFence FENCE, 
+                     VkQueue QUEUE, 
+                     vulkanBuffer* BUFFER, 
+                     unsigned long long OFFSET, 
+                     unsigned long long SIZE, 
+                     void* DATA)
+{
+    // Create a host-visible buffer to upload to. This is the source of data transfer.
+    VkBufferUsageFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    vulkanBuffer staging;
+    createVulkanBuffer(CONTEXT, SIZE, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, flags, true, &staging);
+
+    //Load the data into the buffer
+    loadVulkanBufferData(CONTEXT, &staging, 0, SIZE, 0, DATA);
+
+    // Copy from buffer to GPU memory
+    copyBuffer(CONTEXT, POOL, FENCE, QUEUE, staging.handle, 0, BUFFER->handle, OFFSET, SIZE);
+
+    //Clean up the staging buffer
+    destroyVulkanBuffer(CONTEXT, &staging);
+}
 
 
 // - - - | Vulkan as a Renderer Backend | - - -
@@ -179,7 +211,15 @@ bool vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APPLI
     createVulkanSwapchain(&context, context.framebufferWidth, context.framebufferHeight, &context.swapchain);
 
     // Renderpass
-    createRenderpass(&context, &context.mainRenderpass, 0, 0, context.framebufferWidth, context.framebufferHeight, (float[4]){(float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, 1.0f}, 1.0f, 0);
+    createRenderpass(&context, 
+                     &context.mainRenderpass, 
+                     0, 
+                     0, 
+                     context.framebufferWidth, 
+                     context.framebufferHeight, 
+                     (float[4]){(float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, 1.0f}, 
+                     1.0f, 
+                     0);
 
     // Framebuffers
     context.swapchain.framebuffers = listReserve(vulkanFramebuffer, context.swapchain.imageCount);
@@ -212,20 +252,40 @@ bool vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APPLI
         context.imagesInFlight[i] = 0;
     }
 
-    // Object shader
+    // Create Builtin shaders
     if (!createObjectShader(&context, &context.objectShader))
     {
-        FORGE_LOG_ERROR("Failed to initialize object shader");
+        FORGE_LOG_ERROR("Error loading built in basic lighting shader.");
         return false;
     }
 
-    // Buffers
-    if (!createBuffers(&context))
-    {
-        FORGE_LOG_ERROR("Failed to create buffers");
-        return false;
-    }
+    createBuffers(&context);
+
+    // TODO: temporary test code
+    const unsigned int vertexCount = 4;
+    Vertex3D vertices[vertexCount];
+    forgeZeroMemory(vertices, sizeof(Vertex3D) * vertexCount);
+
+
+    vertices[0].position.x = 0.0;
+    vertices[0].position.y = -0.5;
+
+    vertices[1].position.x = 0.5;
+    vertices[1].position.y = 0.5;
+
+    vertices[2].position.x = 0;
+    vertices[2].position.y = 0.5;
+
+    vertices[3].position.x = 0.5;
+    vertices[3].position.y = -0.5;
+
+    const unsigned int indexCount = 6;
+    unsigned int indices[indexCount] = {0, 1, 2, 0, 3, 1};
+
+    uploadDataRange(&context, context.device.graphicsCommandPool, 0, context.device.graphicsQueue, &context.objectVertexBuffer, 0, sizeof(Vertex3D) * vertexCount, vertices);
     
+    uploadDataRange(&context, context.device.graphicsCommandPool, 0, context.device.graphicsQueue, &context.objectIndexBuffer, 0, sizeof(unsigned int) * indexCount, indices);
+
     FORGE_LOG_INFO("Vulkan Renderer Initialized");
     return true;
 }
@@ -234,6 +294,12 @@ void vulkanRendererBackendShutdown(rendererBackend* BACKEND)
 {
     //Destroy in the opposite order of creation
     vkDeviceWaitIdle(context.device.logicalDevice);
+
+    destroyVulkanBuffer(&context, &context.objectVertexBuffer);
+    destroyVulkanBuffer(&context, &context.objectIndexBuffer);
+
+    destroyObjectShader(&context, &context.objectShader);
+
     for (unsigned char i = 0; i < context.swapchain.maxFramesInFlight; ++i)
     {
         if (context.imageAvailableSemaphores[i])
@@ -387,6 +453,18 @@ bool vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME)
     //Begin renderpass
     beginRenderpass(commandBuffer, &context.mainRenderpass, context.swapchain.framebuffers[context.imageIndex].handle);
 
+    //TODO: temporry test code
+    useObjectShader(&context, &context.objectShader);
+
+    //Bind vertex buffer at offset
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(commandBuffer->handle, 0, 1, &context.objectVertexBuffer.handle, (VkDeviceSize*) offsets);
+
+    //Bind index buffer at offset
+    vkCmdBindIndexBuffer(commandBuffer->handle, context.objectIndexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+
+    // Issue the draw
+    vkCmdDrawIndexed(commandBuffer->handle, 6, 1, 0, 0, 0);
     return true;
 }
 
@@ -605,5 +683,34 @@ bool recreateSwapchain(rendererBackend* BACKEND)
 
 bool createBuffers(vulkanContext* CONTEXT)
 {
+    VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
+    const unsigned long long vertexBufferSize = sizeof(Vertex3D) * 1024 * 1024;
+    if (!createVulkanBuffer(CONTEXT, 
+                            vertexBufferSize, 
+                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                            memoryPropertyFlags, 
+                            true, 
+                            &context.objectVertexBuffer))
+    {
+        FORGE_LOG_ERROR("Error creating vertex buffer");
+        return false;
+    }
+    CONTEXT->geometryVertexOffset = 0;
+
+    const unsigned long long indexBufferSize = sizeof(unsigned int) * 1024 * 1024;
+
+    if (!createVulkanBuffer(CONTEXT, 
+                            indexBufferSize, 
+                            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                            memoryPropertyFlags, 
+                            true, 
+                            &context.objectIndexBuffer))
+    {
+        FORGE_LOG_ERROR("Error creating vertex buffer");
+        return false;
+    }
+    CONTEXT->geometryIndexOffset = 0;
+
+    return true;
 }

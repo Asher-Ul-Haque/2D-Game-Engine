@@ -1,20 +1,19 @@
 #include "vulkan_object_shader.h"
+
 #include "core/logger.h"
 #include "core/memory.h"
+#include "math/math_types.h"
+
 #include "renderer/vulkan/vulkan_shader_utils.h"
 #include "renderer/vulkan/vulkan_pipeline.h"
-#include "math/math_types.h"
-#include <vulkan/vulkan_core.h>
 
 #define BUILTIN_SHADER_NAME_OBJECT "Builtin.ObjectShader"
 
 bool createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
 {
-    FORGE_LOG_DEBUG("Shader module init stage");
     char stageTypeStrings[OBJECT_SHADER_STAGE_COUNT][5] = {"vert", "frag"};
     VkShaderStageFlagBits stageTypes[OBJECT_SHADER_STAGE_COUNT] = {VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT};
 
-    FORGE_LOG_DEBUG("Creating shader modules");
     for (unsigned int i = 0; i < OBJECT_SHADER_STAGE_COUNT; ++i)
     {
         if (!createShaderModule(CONTEXT, BUILTIN_SHADER_NAME_OBJECT, stageTypeStrings[i], stageTypes[i], i, SHADER->stages)) 
@@ -23,7 +22,6 @@ bool createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
             return false;
         }
     }
-    FORGE_LOG_DEBUG("Shader modules created");
 
     //TODO: Descriptors
 
@@ -35,7 +33,6 @@ bool createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
     viewport.height = -(float) CONTEXT->framebufferHeight;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    FORGE_LOG_DEBUG("Viewport created");
 
     //Scissor
     VkRect2D scissor;
@@ -43,13 +40,11 @@ bool createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
     scissor.offset.y = 0;
     scissor.extent.width = CONTEXT->framebufferWidth;
     scissor.extent.height = CONTEXT->framebufferHeight;
-    FORGE_LOG_DEBUG("Scissor created");
 
     //Attributes
     unsigned int offset = 0;
     const int attributeCount = 1;
     VkVertexInputAttributeDescription attributes[attributeCount];
-    FORGE_LOG_DEBUG("Attributes created");
 
     // Position
     VkFormat formats[attributeCount] = {
@@ -66,7 +61,6 @@ bool createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
         attributes[i].offset = offset;
         offset += sizes[i]; 
     }
-    FORGE_LOG_DEBUG("Positions created");
 
     //Stages
     //NOTE: should match the number of shader->stages
@@ -77,7 +71,6 @@ bool createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
         stageCreateInfo[i].sType = SHADER->stages[i].stageCreateInfo.sType;
         stageCreateInfo[i] = SHADER->stages[i].stageCreateInfo;
     }
-    FORGE_LOG_DEBUG("Stages created");
 
     if (!createGraphicsPipeline(CONTEXT, 
                                 &CONTEXT->mainRenderpass, 
@@ -100,7 +93,7 @@ bool createObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
     return true;
 }
 
-void destroyObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
+void destroyObjectShader(vulkanContext* CONTEXT, struct vulkanObjectShader* SHADER)
 {
     destroyGraphicsPipeline(CONTEXT, &SHADER->pipeline);
 
@@ -112,7 +105,9 @@ void destroyObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
     }
 }
 
-void useObjectShader(vulkanContext* CONTEXT, vulkanObjectShader* SHADER)
+void useObjectShader(vulkanContext* CONTEXT, struct vulkanObjectShader* SHADER)
 {
+    unsigned int imageIndex = CONTEXT->imageIndex;
+    bindGraphicsPipeline(&CONTEXT->graphicsCommandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, &SHADER->pipeline);
 }
 

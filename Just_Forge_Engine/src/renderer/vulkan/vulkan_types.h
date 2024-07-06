@@ -179,27 +179,44 @@ typedef struct vulkanContext
 {
     unsigned int framebufferHeight;
     unsigned int framebufferWidth;
+
+    unsigned long long framebufferSizeGeneration;
+    unsigned long long framebufferSizeLastGeneration;
+
     VkInstance instance;
     VkAllocationCallbacks* allocator;
     VkSurfaceKHR surface;
-    vulkanDevice device;
-    vulkanSwapchain swapchain;
-    vulkanRenderpass mainRenderpass;
-    unsigned int imageIndex;
-    unsigned int currentFrame;
-    vulkanCommandBuffer* graphicsCommandBuffers;
 
-    bool recreateSwapchain;
-    int (*findMemoryIndex)(unsigned int TYPE_FILTER, unsigned int PROPERTY_FLAGS);
-    VkSemaphore* imageAvailableSemaphores;
-    VkSemaphore* renderFinishedSemaphores;
-    unsigned int inFlightFencesCount;
-    vulkanFence* inFlightFences;
-    vulkanFence** imagesInFlight;
-    unsigned long long framebufferSizeGeneration;
-    unsigned long long framebufferSizeLastGeneration;
-    vulkanObjectShader objectShader;
     #if defined(_DEBUG)
         VkDebugUtilsMessengerEXT debugMessenger;
     #endif
+
+    vulkanDevice device;
+
+    vulkanSwapchain swapchain;
+    vulkanRenderpass mainRenderpass;
+
+    vulkanBuffer objectVertexBuffer;
+    vulkanBuffer objectIndexBuffer;
+
+    vulkanCommandBuffer* graphicsCommandBuffers;
+    
+    VkSemaphore* imageAvailableSemaphores;
+    VkSemaphore* renderFinishedSemaphores;
+
+    unsigned int inFlightFencesCount;
+    vulkanFence* inFlightFences;
+    vulkanFence** imagesInFlight;
+
+    unsigned int imageIndex;
+    unsigned int currentFrame;
+
+    bool recreateSwapchain;
+
+    vulkanObjectShader objectShader;
+
+    unsigned long long geometryVertexOffset;
+    unsigned long long geometryIndexOffset;
+
+    int (*findMemoryIndex)(unsigned int TYPE_FILTER, unsigned int PROPERTY_FLAGS);
 } vulkanContext;

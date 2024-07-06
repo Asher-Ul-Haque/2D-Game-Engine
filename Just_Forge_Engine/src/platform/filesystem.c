@@ -54,7 +54,7 @@ bool openFile(const char* PATH, fileModes MODE, bool BINARY_MODE, File* OUTPUT_F
 
 void closeFile(File* INPUT_FILE)
 {
-    if (INPUT_FILE->isValid)
+    if (INPUT_FILE->handle)
     {
         fclose((FILE*)INPUT_FILE->handle);
         INPUT_FILE->handle = 0;
@@ -129,7 +129,7 @@ bool readAllBytes(File* INPUT_FILE, unsigned char** OUTPUT, unsigned long long* 
         unsigned long long size = ftell((FILE*)INPUT_FILE->handle);
         rewind((FILE*)INPUT_FILE->handle);
 
-        *OUTPUT = forgeAllocateMemory(size, MEMORY_TAG_FILE);
+        *OUTPUT = forgeAllocateMemory(size * sizeof(unsigned char), MEMORY_TAG_FILE);
         *READ_BYTES = fread(*OUTPUT, 1, size, (FILE*)INPUT_FILE->handle);
 
         if (*READ_BYTES != size)
