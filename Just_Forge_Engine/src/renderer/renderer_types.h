@@ -1,5 +1,14 @@
 #pragma once
 #include "defines.h"
+#include "math/math_types.h"
+
+// - - - Global UBO
+typedef struct globalUBO
+{
+    Matrix4 projection; //64 bytes
+    Matrix4 view; // 64 bytes
+    Matrix4 padding[2]; // 128 bytes
+} globalUBO; //256 bytes = 0.25 kB
 
 
 // - - - | Renderer Backends | - - -
@@ -13,7 +22,8 @@ typedef enum rendererBackendType
 } rendererBackendType;
 
 // - - - Backend
-typedef struct rendererBackend {
+typedef struct rendererBackend 
+{
     unsigned long long frame_number;
 
     bool (*initialize)(struct rendererBackend* BACKEND, const char* APP_NAME);

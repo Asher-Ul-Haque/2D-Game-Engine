@@ -2,7 +2,7 @@
 
 #include "defines.h"
 #include "core/asserts.h"
-
+#include "renderer/renderer_types.h"
 #include <vulkan/vulkan.h>
 
 // Checks the given expression's return value against VK_SUCCESS.
@@ -96,7 +96,8 @@ typedef struct vulkanFramebuffer
     vulkanRenderpass* renderpass;
 } vulkanFramebuffer;
 
-typedef struct vulkanSwapchain {
+typedef struct vulkanSwapchain 
+{
     VkSurfaceFormatKHR imageFormat;
     unsigned char maxFramesInFlight;
     VkSwapchainKHR handle;
@@ -153,6 +154,13 @@ typedef struct vulkanObjectShader
     // vertex, fragment
     vulkanShaderStage stages[OBJECT_SHADER_STAGE_COUNT];
     vulkanPipeline pipeline;
+
+    globalUBO globalUniformBufferObject;
+    vulkanBuffer globalUniformBuffer;
+
+    VkDescriptorPool globalDescriptorPool;
+    VkDescriptorSetLayout globalDescriptorSetLayout;
+    VkDescriptorSet globalDescriptorSet[3]; // one set per frame. 3 for triple buffering
 } vulkanObjectShader;
 
 typedef struct vulkanContext 

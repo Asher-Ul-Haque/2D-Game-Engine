@@ -79,7 +79,7 @@ bool createApplication(game* GAME)
     appState->isSuspended = false;
 
     //Initialize pile allocator
-    unsigned long long systemAllocTotalSize =  1 * 1024 * 1024; // 1mb
+    unsigned long long systemAllocTotalSize =  128 * 1024 + 752; // 128.0734375 kB
     createPileAllocator(systemAllocTotalSize, 0, &appState->systemsAllocator);
 
     //Initialise event system

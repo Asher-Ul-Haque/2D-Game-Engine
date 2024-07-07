@@ -8,3 +8,5 @@ void vulkanObjectShaderDestroy(vulkanContext* CONTEXT, struct vulkanObjectShader
 
 void vulkanObjectShaderUse(vulkanContext* CONTEXT, struct vulkanObjectShader* SHADER);
 
+void vulkanObjectShaderUpdateGlobalState(vulkanContext* CONTEXT, struct vulkanObjectShader* SHADER);
+
