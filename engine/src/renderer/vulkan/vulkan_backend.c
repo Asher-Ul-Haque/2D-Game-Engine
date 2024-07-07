@@ -6,12 +6,13 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_renderpass.h"
 #include "vulkan_command_buffer.h"
-#include "vulkan_frame_buffer.h"
+#include "vulkan_framebuffer.h"
 #include "vulkan_fence.h"
 #include "vulkan_utils.h"
 #include "vulkan_buffer.h"
 
 #include "core/logger.h"
+#include <string.h>
 #include "core/memory.h"
 #include <string.h>
 #include <stdlib.h>
@@ -21,40 +22,44 @@
 #include "dataStructures/list.h"
 #include "math/math_types.h"
 
+#include "math/math_types.h"
+
 #include "platform/platform.h"
 
+// Shaders
 #include "shaders/vulkan_object_shader.h"
 
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
 // - - - | Vulkan Setup | - - -
 
 
 // - - - Vulkan Context
+=======
+// static Vulkan context
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
 static vulkanContext context;
-static unsigned int frameBufferWidth = 0;
-static unsigned int frameBufferHeight = 0;
+static unsigned int cachedFramebufferWidth = 0;
+static unsigned int cachedFramebufferHeight = 0;
 
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
 // - - - Debug Callback
 VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT MESSAGE_SEVERITY, 
     VkDebugUtilsMessageTypeFlagsEXT MESSAGE_TYPES, 
     const VkDebugUtilsMessengerCallbackDataEXT* CALLBACK_DATA, 
     void* USER_DATA);
+=======
+VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+    VkDebugUtilsMessageTypeFlagsEXT message_types,
+    const VkDebugUtilsMessengerCallbackDataEXT* callback_data,
+    void* user_data);
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
 
-// - - - Command Buffer Creation
-void createCommandBuffers(rendererBackend* BACKEND);
-
-// - - - Generate framebuffers
-void regenerateFramebuffers(rendererBackend* BACKEND, vulkanSwapchain* SWAPCHAIN, vulkanRenderpass* RENDERPASS);
-
-// - - - FindMemoryIndex
-int findMemoryIndex(unsigned int TYPE_FILTER, unsigned int PROPERTIES_FLAGS);
-
-// - - - Recreate Swapchain
-bool recreateSwapchain(rendererBackend* BACKEND);
-
-// - - - Create Buffers
+int findMemoryIndex(unsigned int TYPE_FILTER, unsigned int PROPERTY_FLAGS);
 bool createBuffers(vulkanContext* CONTEXT);
 
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
 // - - - Data Upload
 void uploadDataRange(vulkanContext* CONTEXT, 
                      VkCommandPool POOL, 
@@ -80,136 +85,166 @@ void uploadDataRange(vulkanContext* CONTEXT,
     destroyVulkanBuffer(CONTEXT, &staging);
 }
 
+=======
+void createCommandBuffers(rendererBackend* BACKEND);
+void regenerateFramebuffers(rendererBackend* BACKEND, vulkanSwapchain* SWAPCHAIN, vulkanRenderpass* RENDERPASS);
+bool recreateSwapchain(rendererBackend* BACKEND);
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
 
-// - - - | Vulkan as a Renderer Backend | - - -
-
-
-bool vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APPLICATION)
+void uploadDataRange(vulkanContext* CONTEXT, VkCommandPool POOL, VkFence FENCE, VkQueue QUEUE, vulkanBuffer* BUFFER, unsigned long long OFFSET, unsigned long long SIZE, void* DATA) 
 {
-    //Function pointers
+    // Create a host-visible staging buffer to upload to. Mark it as the source of the transfer.
+    VkBufferUsageFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    vulkanBuffer staging;
+    vulkanBufferCreate(CONTEXT, SIZE, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, flags, true, &staging);
+
+    // Load the data into the staging buffer.
+    vulkanBufferLoadData(CONTEXT, &staging, 0, SIZE, 0, DATA);
+
+    // Perform the copy from staging to the device local buffer.
+    vulkanBufferCopyTo(CONTEXT, POOL, FENCE, QUEUE, staging.handle, 0, BUFFER->handle, OFFSET, SIZE);
+
+    // Clean up the staging buffer.
+    vulkanBufferDestroy(CONTEXT, &staging);
+}
+
+bool vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APP_NAME) 
+{
+    // Function pointers
     context.findMemoryIndex = findMemoryIndex;
 
-    //TODO: custom allocator
+    // TODO: custom allocator.
     context.allocator = 0;
 
-    applicationGetFrameBufferSize(&frameBufferWidth, &frameBufferHeight);
-    context.framebufferWidth = frameBufferWidth != 0 ? frameBufferWidth : 800;
-    context.framebufferHeight = frameBufferHeight != 0 ? frameBufferHeight : 600;
-    frameBufferWidth = 0;
-    frameBufferHeight = 0;
+    applicationGetFrameBufferSize(&cachedFramebufferWidth, &cachedFramebufferHeight);
+    context.framebufferWidth = (cachedFramebufferWidth != 0) ? cachedFramebufferWidth : 800;
+    context.framebufferHeight = (cachedFramebufferHeight != 0) ? cachedFramebufferHeight : 600;
+    cachedFramebufferWidth = 0;
+    cachedFramebufferHeight = 0;
 
-
-    //Setup vulkan instance
+    // Setup Vulkan instance.
     VkApplicationInfo appInfo = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
-    appInfo.apiVersion = VK_API_VERSION_1_2; //Vulkan API version 1.2.0 seems popular
-    appInfo.pApplicationName = APPLICATION; 
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0); //Version of the application
+    appInfo.apiVersion = VK_API_VERSION_1_2;
+    appInfo.pApplicationName = APP_NAME;
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "Just Forge Engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0); //Version of the game engine
+    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
     VkInstanceCreateInfo createInfo = {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
     createInfo.pApplicationInfo = &appInfo;
-    
+
+    // Obtain a list of required extensions
     const char** requiredExtensions = listCreate(const char*);
-    listAppend(requiredExtensions, &VK_KHR_SURFACE_EXTENSION_NAME); // Required for surface creation
-    platformGetRequiredExtensions(&requiredExtensions);
-    #if defined(_DEBUG)
-        listAppend(requiredExtensions, &VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // Required for debug utils
-        FORGE_LOG_DEBUG("Required extensions: ");
-        for (unsigned long long i = 0; i < listLength(requiredExtensions); ++i)
-        {
-            FORGE_LOG_DEBUG("    %s", requiredExtensions[i]);
-        }
-    #endif
+    listAppend(requiredExtensions, &VK_KHR_SURFACE_EXTENSION_NAME);  // Generic surface extension
+    platformGetRequiredExtensionNames(&requiredExtensions);       // Platform-specific extension(s)
+#if defined(_DEBUG)
+    listAppend(requiredExtensions, &VK_EXT_DEBUG_UTILS_EXTENSION_NAME);  // debug utilities
+
+    FORGE_LOG_DEBUG("Required extensions:");
+    unsigned int length = listLength(requiredExtensions);
+    for (unsigned int i = 0; i < length; ++i) 
+    {
+        FORGE_LOG_DEBUG(requiredExtensions[i]);
+    }
+#endif
 
     createInfo.enabledExtensionCount = listLength(requiredExtensions);
     createInfo.ppEnabledExtensionNames = requiredExtensions;
 
-
-    //Validation layers
+    // Validation layers.
     const char** requiredValidationLayerNames = 0;
     unsigned int requiredValidationLayerCount = 0;
 
-    #if defined(_DEBUG)
-        FORGE_LOG_DEBUG("Validation layers enabled, Counting...");
+// If validation should be done, get a list of the required validation layert names
+// and make sure they exist. Validation layers should only be enabled on non-release builds.
+#if defined(_DEBUG)
+    FORGE_LOG_INFO("Validation layers enabled. Enumerating...");
 
-        //The list of required validation layers
-        requiredValidationLayerNames = listCreate(const char*);
-        listAppend(requiredValidationLayerNames, &"VK_LAYER_KHRONOS_validation");
-        requiredValidationLayerCount = listLength(requiredValidationLayerNames);
+    // The list of validation layers required.
+    requiredValidationLayerNames = listCreate(const char*);
+    listAppend(requiredValidationLayerNames, &"VK_LAYER_KHRONOS_validation");
+    requiredValidationLayerCount = listLength(requiredValidationLayerNames);
 
-        //Get the available validation layers
-        unsigned int availableLayerCount = 0;
-        VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, 0));
-        VkLayerProperties* availableLayers = listReserve(VkLayerProperties, availableLayerCount);
-        VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers));
+    // Obtain a list of available validation layers
+    unsigned int availableLayerCount = 0;
+    VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, 0));
+    VkLayerProperties* availableLayers = listReserve(VkLayerProperties, availableLayerCount);
+    VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers));
 
-        //Verify that the required validation layers are available
-        for (unsigned int i = 0; i < requiredValidationLayerCount; ++i)
+    // Verify all required layers are available.
+    for (unsigned int i = 0; i < requiredValidationLayerCount; ++i) 
+    {
+        FORGE_LOG_INFO("Searching for layer: %s...", requiredValidationLayerNames[i]);
+        bool found = false;
+        for (unsigned int j = 0; j < availableLayerCount; ++j) 
         {
-            FORGE_LOG_DEBUG("Checking for validation layer: %s", requiredValidationLayerNames[i]);
-            bool layerFound = false;
-            for (unsigned int j = 0; j < availableLayerCount; ++j)
+            if (strcmp(requiredValidationLayerNames[i], availableLayers[j].layerName) == 0) 
             {
-                if (strcmp(requiredValidationLayerNames[i], availableLayers[j].layerName) == 0)
-                {
-                    layerFound = true;
-                    FORGE_LOG_DEBUG("Validation layer found: %s", requiredValidationLayerNames[i]);
-                    break;
-                }
-            }
-
-            if (!layerFound)
-            {
-                FORGE_LOG_FATAL("Validation layer not found: %s", requiredValidationLayerNames[i]);
-                return false;
+                found = true;
+                FORGE_LOG_INFO("Found.");
+                break;
             }
         }
-        FORGE_LOG_DEBUG("All required validation layers found.");
-    #endif
+
+        if (!found) 
+        {
+            FORGE_LOG_FATAL("Required validation layer is missing: %s", requiredValidationLayerNames[i]);
+            return false;
+        }
+    }
+    FORGE_LOG_INFO("All required validation layers are present.");
+#endif
 
     createInfo.enabledLayerCount = requiredValidationLayerCount;
     createInfo.ppEnabledLayerNames = requiredValidationLayerNames;
 
     VK_CHECK(vkCreateInstance(&createInfo, context.allocator, &context.instance));
-    FORGE_LOG_INFO("Vulkan instance created");
+    FORGE_LOG_INFO("Vulkan Instance created.");
 
+    // Debugger
+#if defined(_DEBUG)
+    FORGE_LOG_DEBUG("Creating Vulkan debugger...");
+    unsigned int logSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;  //|
+                                                                      //    VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
 
-    //Setup debug messenger
-    #if defined(_DEBUG)
-        FORGE_LOG_DEBUG("Creating debug messenger...");
-        unsigned int logSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
+    debugCreateInfo.messageSeverity = logSeverity;
+    debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+    debugCreateInfo.pfnUserCallback = vk_debug_callback;
 
-        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
-        debugCreateInfo.messageSeverity = logSeverity;
-        debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        debugCreateInfo.pfnUserCallback = vkDebugCallback;
-        debugCreateInfo.pUserData = 0;
+    PFN_vkCreateDebugUtilsMessengerEXT func =
+        (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
+    FORGE_ASSERT_MESSAGE(func, "Failed to create debug messenger!");
+    VK_CHECK(func(context.instance, &debugCreateInfo, context.allocator, &context.debugMessenger));
+    FORGE_LOG_DEBUG("Vulkan debugger created.");
+#endif
 
-        PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
-        FORGE_ASSERT_MESSAGE(func, "Failed to create debug messenger!");
-        VK_CHECK(func(context.instance, &debugCreateInfo, context.allocator, &context.debugMessenger));
-        FORGE_LOG_DEBUG("Vulkan debugger created.");
-    #endif
-    
-    //Setup vulkan surface
-    FORGE_LOG_INFO("Creating vulkan surface");
-    if (!platformCreateSurface(&context))
+    // Surface
+    FORGE_LOG_DEBUG("Creating Vulkan surface...");
+    if (!platformCreateVulkanSurface(&context)) 
     {
-        FORGE_LOG_ERROR("Failed to create vulkan surface");
+        FORGE_LOG_ERROR("Failed to create platform surface!");
         return false;
     }
+    FORGE_LOG_DEBUG("Vulkan surface created.");
 
-    //Setup vulkan device
-    if (!createVulkanDevice(&context))
+    // Device creation
+    if (!vulkanDeviceCreate(&context)) 
     {
-        FORGE_LOG_ERROR("Failed to create vulkan device");
+        FORGE_LOG_ERROR("Failed to create device!");
         return false;
     }
 
     // Swapchain
-    createVulkanSwapchain(&context, context.framebufferWidth, context.framebufferHeight, &context.swapchain);
+    vulkanSwapchainCreate(
+        &context,
+        context.framebufferWidth,
+        context.framebufferHeight,
+        &context.swapchain);
 
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
     // Renderpass
     createRenderpass(&context, 
                      &context.mainRenderpass, 
@@ -220,48 +255,67 @@ bool vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APPLI
                      (float[4]){(float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, 1.0f}, 
                      1.0f, 
                      0);
+=======
+    vulkanRenderpassCreate(
+        &context,
+        &context.mainRenderpass,
+        0, 0, context.framebufferWidth, context.framebufferHeight,
+        0.0f, 0.0f, 0.2f, 1.0f,
+        1.0f,
+        0);
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
 
-    // Framebuffers
+    // Swapchain framebuffers.
     context.swapchain.framebuffers = listReserve(vulkanFramebuffer, context.swapchain.imageCount);
     regenerateFramebuffers(BACKEND, &context.swapchain, &context.mainRenderpass);
 
-    // Command buffer
+    // Create command buffers.
     createCommandBuffers(BACKEND);
 
-    // Sync
+    // Create sync objects.
     context.imageAvailableSemaphores = listReserve(VkSemaphore, context.swapchain.maxFramesInFlight);
-    context.renderFinishedSemaphores = listReserve(VkSemaphore, context.swapchain.maxFramesInFlight);
+    context.queueCompleteSemaphores = listReserve(VkSemaphore, context.swapchain.maxFramesInFlight);
     context.inFlightFences = listReserve(vulkanFence, context.swapchain.maxFramesInFlight);
 
-    for (unsigned char i = 0; i < context.swapchain.maxFramesInFlight; ++i)
+    for (unsigned char i = 0; i < context.swapchain.maxFramesInFlight; ++i) 
     {
-        VkSemaphoreCreateInfo semaphoreInfo = {};
-        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        VK_CHECK(vkCreateSemaphore(context.device.logicalDevice, &semaphoreInfo, context.allocator, &context.imageAvailableSemaphores[i]));
-        VK_CHECK(vkCreateSemaphore(context.device.logicalDevice, &semaphoreInfo, context.allocator, &context.renderFinishedSemaphores[i]));
+        VkSemaphoreCreateInfo semaphoreCreateInfo = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        vkCreateSemaphore(context.device.logicalDevice, &semaphoreCreateInfo, context.allocator, &context.imageAvailableSemaphores[i]);
+        vkCreateSemaphore(context.device.logicalDevice, &semaphoreCreateInfo, context.allocator, &context.queueCompleteSemaphores[i]);
 
-        //Create the fence signalled, indicating that the first frame has already been rendered
-        //This prevents the application to wait for the first frame to be rendered becuase no frame is rendered before a frame before it has been rendered.
-        createFence(&context, true, &context.inFlightFences[i]);
+        // Create the fence in a signaled state, indicating that the first frame has already been "rendered".
+        // This will prevent the application from waiting indefinitely for the first frame to render since it
+        // cannot be rendered until a frame is "rendered" before it.
+        vulkanFenceCreate(&context, true, &context.inFlightFences[i]);
     }
 
-    // In flight fences should not yet exist at this point, so clear the list. These are stored in pointers because the initial state should be 0, and will be 0 when not used. Actual fences are owned by this list
+    // In flight fences should not yet exist at this point, so clear the list. These are stored in pointers
+    // because the initial state should be 0, and will be 0 when not in use. Acutal fences are not owned
+    // by this list.
     context.imagesInFlight = listReserve(vulkanFence, context.swapchain.imageCount);
-    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i)
+    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i) 
     {
         context.imagesInFlight[i] = 0;
     }
 
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
     // Create Builtin shaders
     if (!createObjectShader(&context, &context.objectShader))
     {
         FORGE_LOG_ERROR("Error loading built in basic lighting shader.");
+=======
+    // Create builtin shaders
+    if (!vulkanObjectShaderCreate(&context, &context.objectShader)) 
+    {
+        FORGE_LOG_ERROR("Error loading built-in basic_lighting shader.");
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
         return false;
     }
 
     createBuffers(&context);
 
     // TODO: temporary test code
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
     const unsigned int vertexCount = 4;
     Vertex3D vertices[vertexCount];
     forgeZeroMemory(vertices, sizeof(Vertex3D) * vertexCount);
@@ -278,158 +332,225 @@ bool vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APPLI
 
     vertices[3].position.x = 0.5;
     vertices[3].position.y = -0.5;
+=======
+    const unsigned int vertCount = 4;
+    Vertex3D verts[vertCount];
+    forgeZeroMemory(verts, sizeof(Vertex3D) * vertCount);
+
+    verts[0].position.x = 0.0;
+    verts[0].position.y = -0.5;
+
+    verts[1].position.x = 0.5;
+    verts[1].position.y = 0.5;
+
+    verts[2].position.x = 0;
+    verts[2].position.y = 0.5;
+
+    verts[3].position.x = 0.5;
+    verts[3].position.y = -0.5;
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
 
     const unsigned int indexCount = 6;
     unsigned int indices[indexCount] = {0, 1, 2, 0, 3, 1};
 
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
     uploadDataRange(&context, context.device.graphicsCommandPool, 0, context.device.graphicsQueue, &context.objectVertexBuffer, 0, sizeof(Vertex3D) * vertexCount, vertices);
     
     uploadDataRange(&context, context.device.graphicsCommandPool, 0, context.device.graphicsQueue, &context.objectIndexBuffer, 0, sizeof(unsigned int) * indexCount, indices);
 
     FORGE_LOG_INFO("Vulkan Renderer Initialized");
+=======
+    uploadDataRange(&context, context.device.graphicsCommandPool, 0, context.device.graphicsQueue, &context.objectVertexBuffer, 0, sizeof(Vertex3D) * vertCount, verts);
+    uploadDataRange(&context, context.device.graphicsCommandPool, 0, context.device.graphicsQueue, &context.objectIndexBuffer, 0, sizeof(unsigned int) * indexCount, indices);
+    // TODO: end temp code
+
+    FORGE_LOG_INFO("Vulkan renderer initialized successfully.");
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
     return true;
 }
 
-void vulkanRendererBackendShutdown(rendererBackend* BACKEND)
+void vulkanRendererBackendShutdown(rendererBackend* BACKEND) 
 {
-    //Destroy in the opposite order of creation
     vkDeviceWaitIdle(context.device.logicalDevice);
 
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
     destroyVulkanBuffer(&context, &context.objectVertexBuffer);
     destroyVulkanBuffer(&context, &context.objectIndexBuffer);
 
     destroyObjectShader(&context, &context.objectShader);
 
     for (unsigned char i = 0; i < context.swapchain.maxFramesInFlight; ++i)
+=======
+    // Destroy in the opposite order of creation.
+    // Destroy buffers
+    vulkanBufferDestroy(&context, &context.objectVertexBuffer);
+    vulkanBufferDestroy(&context, &context.objectIndexBuffer);
+
+    vulkanObjectShaderDestroy(&context, &context.objectShader);
+
+    // Sync objects
+    for (unsigned char i = 0; i < context.swapchain.maxFramesInFlight; ++i) 
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
     {
-        if (context.imageAvailableSemaphores[i])
+        if (context.imageAvailableSemaphores[i]) 
         {
-            vkDestroySemaphore(context.device.logicalDevice, context.imageAvailableSemaphores[i], context.allocator);
+            vkDestroySemaphore(
+                context.device.logicalDevice,
+                context.imageAvailableSemaphores[i],
+                context.allocator);
             context.imageAvailableSemaphores[i] = 0;
         }
-        if (context.renderFinishedSemaphores[i])
+        if (context.queueCompleteSemaphores[i]) 
         {
-            vkDestroySemaphore(context.device.logicalDevice, context.renderFinishedSemaphores[i], context.allocator);
-            context.renderFinishedSemaphores[i] = 0;
+            vkDestroySemaphore(
+                context.device.logicalDevice,
+                context.queueCompleteSemaphores[i],
+                context.allocator);
+            context.queueCompleteSemaphores[i] = 0;
         }
-        destroyFence(&context, &context.inFlightFences[i]);
+        vulkanFenceDestroy(&context, &context.inFlightFences[i]);
     }
     listDestroy(context.imageAvailableSemaphores);
-    listDestroy(context.renderFinishedSemaphores);
-    listDestroy(context.inFlightFences);
-    listDestroy(context.imagesInFlight);
     context.imageAvailableSemaphores = 0;
-    context.renderFinishedSemaphores = 0;
+
+    listDestroy(context.queueCompleteSemaphores);
+    context.queueCompleteSemaphores = 0;
+
+    listDestroy(context.inFlightFences);
     context.inFlightFences = 0;
+
+    listDestroy(context.imagesInFlight);
     context.imagesInFlight = 0;
-    
-    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i)
+
+    // Command buffers
+    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i) 
     {
-        if (context.graphicsCommandBuffers[i].handle)
+        if (context.graphicsCommandBUffers[i].handle) 
         {
-            commandBufferFree(&context, context.device.graphicsCommandPool, &context.graphicsCommandBuffers[i]);
-            context.graphicsCommandBuffers[i].handle = 0;
+            vulkanCommandBufferFree(
+                &context,
+                context.device.graphicsCommandPool,
+                &context.graphicsCommandBUffers[i]);
+            context.graphicsCommandBUffers[i].handle = 0;
         }
     }
-    listDestroy(context.graphicsCommandBuffers);
+    listDestroy(context.graphicsCommandBUffers);
+    context.graphicsCommandBUffers = 0;
 
-    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i)
+    // Destroy framebuffers
+    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i) 
     {
-        destroyFrameBuffer(&context, &context.swapchain.framebuffers[i]);
+        vulkanFramebufferDestroy(&context, &context.swapchain.framebuffers[i]);
     }
 
-    FORGE_LOG_INFO("Destroying vulkan renderpass");
-    destroyRenderpass(&context, &context.mainRenderpass);  
+    // Renderpass
+    vulkanRenderpassDestroy(&context, &context.mainRenderpass);
 
-    FORGE_LOG_INFO("Destroying vulkan swapchain");
-    destroyVulkanSwapchain(&context, &context.swapchain);
+    // Swapchain
+    vulkanSwapchainDestroy(&context, &context.swapchain);
 
-    FORGE_LOG_INFO("Destroying vulkan device");
-    destroyVulkanDevice(&context);
+    FORGE_LOG_DEBUG("Destroying Vulkan device...");
+    vulkanDeviceDestroy(&context);
 
-    FORGE_LOG_INFO("Destroying vulkan surface");
-    if (context.surface)
+    FORGE_LOG_DEBUG("Destroying Vulkan surface...");
+    if (context.surface) 
     {
         vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
         context.surface = 0;
     }
-        
-    FORGE_LOG_INFO("Destroying vulkan debugger");
-    if (context.debugMessenger)
+
+#if defined(_DEBUG)
+    FORGE_LOG_DEBUG("Destroying Vulkan debugger...");
+    if (context.debugMessenger) 
     {
-        PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkDestroyDebugUtilsMessengerEXT");
+        PFN_vkDestroyDebugUtilsMessengerEXT func =
+            (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkDestroyDebugUtilsMessengerEXT");
         func(context.instance, context.debugMessenger, context.allocator);
     }
+#endif
 
-    FORGE_LOG_INFO("Destroying Vulkan Instance");
+    FORGE_LOG_DEBUG("Destroying Vulkan instance...");
     vkDestroyInstance(context.instance, context.allocator);
 }
 
-void vulkanRendererBackendResized(rendererBackend* BACKEND, unsigned short WIDTH, unsigned short HEIGHT)
+void vulkanRendererBackendOnResized(rendererBackend* BACKEND, unsigned short WIDTH, unsigned short HEIGHT) 
 {
-    // update the frambuffer size generation, a counter which indicates when the framebuffer size is updated
-    frameBufferWidth = WIDTH;
-    frameBufferHeight = HEIGHT;
+    // Update the "framebuffer size generation", a counter which indicates when the
+    // framebuffer size has been updated.
+    cachedFramebufferWidth = WIDTH;
+    cachedFramebufferHeight = HEIGHT;
     context.framebufferSizeGeneration++;
-    FORGE_LOG_DEBUG("Framebuffer resized to %d x %d with generation %d", WIDTH, HEIGHT, context.framebufferSizeGeneration);
+
+    FORGE_LOG_INFO("Vulkan renderer backend->resized: w/h/gen: %i/%i/%llu", WIDTH, HEIGHT, context.framebufferSizeGeneration);
 }
 
-bool vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME)
+bool vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME) 
 {
-    vulkanDevice* gpu = &context.device;
-    
-    //Check if recreating swapchain and boot out
-    if (context.recreateSwapchain)
+    vulkanDevice* device = &context.device;
+
+    // Check if recreating swap chain and boot out.
+    if (context.recreatingSwapchain) 
     {
-        VkResult result = vkDeviceWaitIdle(gpu->logicalDevice);
-        if (resultSuccess(result))
+        VkResult result = vkDeviceWaitIdle(device->logicalDevice);
+        if (!vulkanResultIsSuccess(result)) 
         {
-            FORGE_LOG_ERROR("vulkan_render_backend : vulkanRenderBackendBeginFrame : Failed to wait for device idle(1) : '%s'", vulkanResultToString(result, true));
+            FORGE_LOG_ERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (1) failed: '%s'", vulkanResultToString(result, true));
             return false;
         }
-        FORGE_LOG_DEBUG("Recreating swapchain... booting");
+        FORGE_LOG_INFO("Recreating swapchain, booting.");
         return false;
     }
 
-    //Check if framebuffer has been resized. If so, a recreation of the swapchain is needed
-    if (context.framebufferSizeGeneration != context.framebufferSizeLastGeneration)
+    // Check if the framebuffer has been resized. If so, a new swapchain must be created.
+    if (context.framebufferSizeGeneration != context.framebufferSizeLastGeneration) 
     {
-        VkResult result = vkDeviceWaitIdle(gpu->logicalDevice);
-        if (!resultSuccess(result))
+        VkResult result = vkDeviceWaitIdle(device->logicalDevice);
+        if (!vulkanResultIsSuccess(result)) 
         {
-            FORGE_LOG_ERROR("vulkan_render_backend : vulkanRenderBackendBeginFrame : Failed to wait for device idle(2) : '%s'", vulkanResultToString(result, true));
-            return false;
-        }
-        // If the swapchain recreation failed (because, for example, the window was minimized).
-        // Boot out before unsetting the flag
-        if (!recreateSwapchain(BACKEND))
-        {
+            FORGE_LOG_ERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (2) failed: '%s'", vulkanResultToString(result, true));
             return false;
         }
 
-        FORGE_LOG_DEBUG("Framebuffer resized, booting...");
-        return false;
-    }
-    
-    //Wait for the execution of the current frame to be complete. The fence being free will allow this one to move on
-    if (!waitForFence(&context, &context.inFlightFences[context.currentFrame], UINT64_MAX))
-    {
-        FORGE_LOG_WARNING("vulkan_render_backend : vulkanRenderBackendBeginFrame : Failed to wait for in flight fence");
-        return false;
-    }
-    
-    //Acquire the next image
-    if (!vulkanSwapchainAquireNextImageIndex(&context, &context.swapchain, UINT64_MAX, context.imageAvailableSemaphores[context.currentFrame], 0, &context.imageIndex))
-    {
-        FORGE_LOG_WARNING("vulkan_render_backend : vulkanRenderBackendBeginFrame : Failed to acquire next image");
+        // If the swapchain recreation failed (because, for example, the window was minimized),
+        // boot out before unsetting the flag.
+        if (!recreateSwapchain(BACKEND)) 
+        {
+            return false;
+        }
+
+        FORGE_LOG_INFO("Resized, booting.");
         return false;
     }
 
-    vulkanCommandBuffer* commandBuffer = &context.graphicsCommandBuffers[context.imageIndex];
-    commandBufferReset(commandBuffer);
-    commandBufferBegin(commandBuffer, false, false, false);
+    // Wait for the execution of the current frame to complete. The fence being free will allow this one to move on.
+    if (!vulkanFenceWait(
+            &context,
+            &context.inFlightFences[context.currentFrame],
+            UINT64_MAX)) 
+    {
+        FORGE_LOG_WARNING("In-flight fence wait failure!");
+        return false;
+    }
 
-    //Dynamic state (consistent with OpenGL)
+    // Acquire the next image from the swap chain. Pass along the semaphore that should signaled when this completes.
+    // This same semaphore will later be waited on by the queue submission to ensure this image is available.
+    if (!vulkanSwapchainAcquireNextImageIndex(
+            &context,
+            &context.swapchain,
+            UINT64_MAX,
+            context.imageAvailableSemaphores[context.currentFrame],
+            0,
+            &context.imageIndex)) 
+    {
+        return false;
+    }
+
+    // Begin recording commands.
+    vulkanCommandBuffer* commandBuffer = &context.graphicsCommandBUffers[context.imageIndex];
+    vulkanCommandBufferReset(commandBuffer);
+    vulkanCommandBufferBegin(commandBuffer, false, false, false);
+
+    // Dynamic state
     VkViewport viewport;
     viewport.x = 0.0f;
     viewport.y = (float)context.framebufferHeight;
@@ -438,7 +559,7 @@ bool vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME)
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
-    //Scissor
+    // Scissor
     VkRect2D scissor;
     scissor.offset.x = scissor.offset.y = 0;
     scissor.extent.width = context.framebufferWidth;
@@ -447,11 +568,28 @@ bool vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME)
     vkCmdSetViewport(commandBuffer->handle, 0, 1, &viewport);
     vkCmdSetScissor(commandBuffer->handle, 0, 1, &scissor);
 
-    context.mainRenderpass.width = context.framebufferWidth;
-    context.mainRenderpass.height = context.framebufferHeight;
+    context.mainRenderpass.w = context.framebufferWidth;
+    context.mainRenderpass.h = context.framebufferHeight;
 
-    //Begin renderpass
-    beginRenderpass(commandBuffer, &context.mainRenderpass, context.swapchain.framebuffers[context.imageIndex].handle);
+    // Begin the render pass.
+    vulkanRenderpassBegin(
+        commandBuffer,
+        &context.mainRenderpass,
+        context.swapchain.framebuffers[context.imageIndex].handle);
+
+    // TODO: temporary test code
+    vulkanObjectShaderUse(&context, &context.objectShader);
+
+    // Bind vertex buffer at offset.
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(commandBuffer->handle, 0, 1, &context.objectVertexBuffer.handle, (VkDeviceSize*)offsets);
+
+    // Bind index buffer at offset.
+    vkCmdBindIndexBuffer(commandBuffer->handle, context.objectIndexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+
+    // Issue the draw.
+    vkCmdDrawIndexed(commandBuffer->handle, 6, 1, 0, 0, 0);
+    // TODO: end temporary test code
 
     //TODO: temporry test code
     useObjectShader(&context, &context.objectShader);
@@ -468,221 +606,255 @@ bool vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME)
     return true;
 }
 
-bool vulkanRendererBackendEndFrame(rendererBackend* BACKEND, float DELTA_TIME)
+bool vulkanRendererBackendEndFrame(rendererBackend* BACKEND, float DELTA_TIME) 
 {
-    vulkanCommandBuffer* commandBuffer = &context.graphicsCommandBuffers[context.imageIndex];
+    vulkanCommandBuffer* commandBuffer = &context.graphicsCommandBUffers[context.imageIndex];
 
-    //End renderpass
-    endRenderpass(commandBuffer, &context.mainRenderpass);
+    // End renderpass
+    vulkanRenderpassEnd(commandBuffer, &context.mainRenderpass);
 
-    //End command buffer
-    commandBufferEnd(commandBuffer);
+    vulkanCommandBufferEnd(commandBuffer);
 
-    // Make sure the previous frame is not using this image (i.e., its fence is being waited on)
-    if (context.imagesInFlight[context.imageIndex] != VK_NULL_HANDLE)
-    {
-        waitForFence(&context, context.imagesInFlight[context.imageIndex], UINT64_MAX);
+    // Make sure the previous frame is not using this image (i.e. its fence is being waited on)
+    if (context.imagesInFlight[context.imageIndex] != VK_NULL_HANDLE) 
+    {  // was frame
+        vulkanFenceWait(
+            &context,
+            context.imagesInFlight[context.imageIndex],
+            UINT64_MAX);
     }
 
-    // Mark the image fence as now being in use by this frame
+    // Mark the image fence as in-use by this frame.
     context.imagesInFlight[context.imageIndex] = &context.inFlightFences[context.currentFrame];
 
-    //Reset the fence for use in the next frame
-    resetFence(&context, &context.inFlightFences[context.currentFrame]);
+    // Reset the fence for use on the next frame
+    vulkanFenceReset(&context, &context.inFlightFences[context.currentFrame]);
 
-    //Submit the queue and wait for the operation to complete
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    // Submit the queue and wait for the operation to complete.
+    // Begin queue submission
+    VkSubmitInfo submitInfo = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+
+    // Command buffer(s) to be executed.
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer->handle;
 
-    //Semaphores to be signalled when the queue is complete
+    // The semaphore(s) to be signaled when the queue is complete.
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &context.renderFinishedSemaphores[context.currentFrame];
+    submitInfo.pSignalSemaphores = &context.queueCompleteSemaphores[context.currentFrame];
 
-    //Semaphores to wait on before the queue is executed
+    // Wait semaphore ensures that the operation cannot begin until the image is available.
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = &context.imageAvailableSemaphores[context.currentFrame];
 
-    //Each semaphoree waits on the corresponding pipeline stages to complete 1:1 ratio
-    // VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT is the stage where the color attachment is written to. It prevents subsequent color attachment
-    // Writes from executing until the semaphore signals (i.e., one frame is submitted at a time)
+    // Each semaphore waits on the corresponding pipeline stage to complete. 1:1 ratio.
+    // VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT prevents subsequent colour attachment
+    // writes from executing until the semaphore signals (i.e. one frame is presented at a time)
     VkPipelineStageFlags flags[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.pWaitDstStageMask = flags;
 
-    VkResult result = vkQueueSubmit(context.device.graphicsQueue, 1, &submitInfo, context.inFlightFences[context.currentFrame].handle);
+    VkResult result = vkQueueSubmit(
+        context.device.graphicsQueue,
+        1,
+        &submitInfo,
+        context.inFlightFences[context.currentFrame].handle);
+    if (result != VK_SUCCESS) 
+    {
+        FORGE_LOG_ERROR("vkQueueSubmit failed with result: %s", vulkanResultToString(result, true));
+        return false;
+    }
 
-    commandBufferUpdateSubmits(commandBuffer);
-    //End of queue submission
+    vulkanCommandBufferUpdateSubmitted(commandBuffer);
+    // End queue submission
 
-    //Present the image
-    vulkanSwapchainPresentImage(&context, &context.swapchain, context.device.graphicsQueue, context.device.presentQueue, context.renderFinishedSemaphores[context.currentFrame], context.imageIndex);
+    // Give the image back to the swapchain.
+    vulkanSwapchainPresent(
+        &context,
+        &context.swapchain,
+        context.device.graphicsQueue,
+        context.device.presentQueue,
+        context.queueCompleteSemaphores[context.currentFrame],
+        context.imageIndex);
 
     return true;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT MESSAGE_SEVERITY, VkDebugUtilsMessageTypeFlagsEXT MESSAGE_TYPES, const VkDebugUtilsMessengerCallbackDataEXT* CALLBACK_DATA, void* USER_DATA)
-{
-    switch (MESSAGE_SEVERITY)
+VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+    VkDebugUtilsMessageTypeFlagsEXT message_types,
+    const VkDebugUtilsMessengerCallbackDataEXT* callback_data,
+    void* user_data) 
+    {
+    switch (message_severity) 
     {
         default:
-
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            FORGE_LOG_ERROR(CALLBACK_DATA->pMessage);
+            FORGE_LOG_ERROR(callback_data->pMessage);
             break;
-
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            FORGE_LOG_WARNING(CALLBACK_DATA->pMessage);
+            FORGE_LOG_WARNING(callback_data->pMessage);
             break;
-
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            FORGE_LOG_DEBUG(CALLBACK_DATA->pMessage);
+            FORGE_LOG_INFO(callback_data->pMessage);
             break;
-
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            FORGE_LOG_TRACE(CALLBACK_DATA->pMessage);
+            FORGE_LOG_TRACE(callback_data->pMessage);
             break;
     }
     return VK_FALSE;
 }
 
-int findMemoryIndex(unsigned int TYPE_FILTER, unsigned int PROPERTY_FLAGS)
+int findMemoryIndex(unsigned int TYPE_FILTER, unsigned int PROPERTY_FLAGS) 
 {
     VkPhysicalDeviceMemoryProperties memoryProperties;
     vkGetPhysicalDeviceMemoryProperties(context.device.physicalDevice, &memoryProperties);
 
-    for (unsigned int i = 0; i < memoryProperties.memoryTypeCount; ++i)
+    for (unsigned int i = 0; i < memoryProperties.memoryTypeCount; ++i) 
     {
-        if ((TYPE_FILTER & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & PROPERTY_FLAGS) == PROPERTY_FLAGS)
+        // Check each memory type to see if its bit is set to 1.
+        if (TYPE_FILTER & (1 << i) && (memoryProperties.memoryTypes[i].propertyFlags & PROPERTY_FLAGS) == PROPERTY_FLAGS) 
         {
             return i;
         }
     }
 
-    FORGE_LOG_WARNING("Failed to find suitable memory type");
+    FORGE_LOG_WARNING("Unable to find suitable memory type!");
     return -1;
 }
 
-void createCommandBuffers(rendererBackend* BACKEND)
+void createCommandBuffers(rendererBackend* BACKEND) 
 {
-    if (!context.graphicsCommandBuffers)
+    if (!context.graphicsCommandBUffers) 
     {
-        context.graphicsCommandBuffers = listReserve(vulkanCommandBuffer, context.swapchain.imageCount);
-        for (unsigned int i = 0; i < context.swapchain.imageCount; ++i)
+        context.graphicsCommandBUffers = listReserve(vulkanCommandBuffer, context.swapchain.imageCount);
+        for (unsigned int i = 0; i < context.swapchain.imageCount; ++i) 
         {
-            forgeZeroMemory(&context.graphicsCommandBuffers[i], sizeof(vulkanCommandBuffer));
+            forgeZeroMemory(&context.graphicsCommandBUffers[i], sizeof(vulkanCommandBuffer));
         }
     }
 
-    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i)
+    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i) 
     {
-        if (context.graphicsCommandBuffers[i].handle)
+        if (context.graphicsCommandBUffers[i].handle) 
         {
-            commandBufferFree(&context, context.device.graphicsCommandPool, &context.graphicsCommandBuffers[i]);
+            vulkanCommandBufferFree(
+                &context,
+                context.device.graphicsCommandPool,
+                &context.graphicsCommandBUffers[i]);
         }
-        forgeZeroMemory(&context.graphicsCommandBuffers[i], sizeof(vulkanCommandBuffer));
-        commandBufferAllocate(&context, context.device.graphicsCommandPool, true, &context.graphicsCommandBuffers[i]);
+        forgeZeroMemory(&context.graphicsCommandBUffers[i], sizeof(vulkanCommandBuffer));
+        vulkanCommandBufferAllocate(
+            &context,
+            context.device.graphicsCommandPool,
+            true,
+            &context.graphicsCommandBUffers[i]);
     }
 
-    FORGE_LOG_INFO("Command buffers created");
+    FORGE_LOG_DEBUG("Vulkan command buffers created.");
 }
 
-void regenerateFramebuffers(rendererBackend* BACKEND, vulkanSwapchain* SWAPCHAIN, vulkanRenderpass* RENDERPASS)
+void regenerateFramebuffers(rendererBackend* BACKEND, vulkanSwapchain* SWAPCHAIN, vulkanRenderpass* RENDERPASS) 
 {
-    for (unsigned int i = 0; i < SWAPCHAIN->imageCount; ++i)
+    for (unsigned int i = 0; i < SWAPCHAIN->imageCount; ++i) 
     {
-        // TODO: make this dynamic based on config of attachments
+        // TODO: make this dynamic based on the currently configured attachments
         unsigned int attachmentCount = 2;
-        VkImageView attachments[2] = {SWAPCHAIN->imageViews[i], SWAPCHAIN->depthAttachment.view};
+        VkImageView attachments[] = {
+            SWAPCHAIN->views[i],
+            SWAPCHAIN->depthAttachment.view};
 
-        createFrameBuffer(&context, RENDERPASS, context.framebufferWidth, context.framebufferHeight, attachmentCount, attachments, &context.swapchain.framebuffers[i]);
+        vulkanFramebufferCreate(
+            &context,
+            RENDERPASS,
+            context.framebufferWidth,
+            context.framebufferHeight,
+            attachmentCount,
+            attachments,
+            &context.swapchain.framebuffers[i]);
     }
 }
 
-bool recreateSwapchain(rendererBackend* BACKEND)
+bool recreateSwapchain(rendererBackend* BACKEND) 
 {
-    //If already recreating swapchain, boot out
-    if (context.recreateSwapchain)
+    // If already being recreated, do not try again.
+    if (context.recreatingSwapchain) 
     {
-        FORGE_LOG_DEBUG("vulkan_render_backend : recreateSwapchain : Already recreating swapchain");
+        FORGE_LOG_DEBUG("recreate_swapchain called when already recreating. Booting.");
         return false;
     }
 
-    //Detect if the window is too smol to be rendered
-    if (context.framebufferWidth == 0 || context.framebufferHeight == 0)
+    // Detect if the window is too small to be drawn to
+    if (context.framebufferWidth == 0 || context.framebufferHeight == 0) 
     {
-        FORGE_LOG_DEBUG("vulkan_render_backend : recreateSwapchain : Framebuffer too small to render");
+        FORGE_LOG_DEBUG("recreate_swapchain called when window is < 1 in a dimension. Booting.");
         return false;
     }
 
-    //Mark as recreating swapchain
-    context.recreateSwapchain = true;
+    // Mark as recreating if the dimensions are valid.
+    context.recreatingSwapchain = true;
 
-    //Wait for any operations to complete
+    // Wait for any operations to complete.
     vkDeviceWaitIdle(context.device.logicalDevice);
 
-    //Clear out
-    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i)
+    // Clear these out just in case.
+    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i) 
     {
         context.imagesInFlight[i] = 0;
     }
 
-    //Requery support
-    vulkanDeviceQuerySwapchainSupport(context.device.physicalDevice, context.surface, &context.device.swapchainSupport);
+    // Requery support
+    vulkanDeviceQuerySwapchainSupport(
+        context.device.physicalDevice,
+        context.surface,
+        &context.device.swapchainSupport);
     vulkanDeviceDetectDepthFormat(&context.device);
 
-    recreateVulkanSwapchain(&context, frameBufferWidth, frameBufferHeight, &context.swapchain);
+    vulkanSwapchainRecreate(
+        &context,
+        cachedFramebufferWidth,
+        cachedFramebufferHeight,
+        &context.swapchain);
 
-    //Sync the frambuffer size 
-    context.framebufferWidth = frameBufferWidth;
-    context.framebufferHeight = frameBufferHeight;
-    context.mainRenderpass.width = frameBufferWidth;
-    context.mainRenderpass.height = frameBufferHeight;
-    context.mainRenderpass.width = context.framebufferWidth;
-    context.mainRenderpass.height = context.framebufferHeight;
-    for (int i = 0; i < 3; ++i)
-    {
-        context.mainRenderpass.clearColor[i] += rand() % 10 / 10.0f;
-        if (context.mainRenderpass.clearColor[i] > 1.0f)
-        {
-            context.mainRenderpass.clearColor[i] = 0.0f;
-        }
-    }
-    frameBufferWidth = 0;
-    frameBufferHeight = 0;
+    // Sync the framebuffer size with the cached sizes.
+    context.framebufferWidth = cachedFramebufferWidth;
+    context.framebufferHeight = cachedFramebufferHeight;
+    context.mainRenderpass.w = context.framebufferWidth;
+    context.mainRenderpass.h = context.framebufferHeight;
+    cachedFramebufferWidth = 0;
+    cachedFramebufferHeight = 0;
 
-    //Updat frambuffer size generation
+    // Update framebuffer size generation.
     context.framebufferSizeLastGeneration = context.framebufferSizeGeneration;
 
-    //cleanup swapchain
-    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i)
+    // cleanup swapchain
+    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i) 
     {
-        commandBufferFree(&context, context.device.graphicsCommandPool, &context.graphicsCommandBuffers[i]);
+        vulkanCommandBufferFree(&context, context.device.graphicsCommandPool, &context.graphicsCommandBUffers[i]);
     }
 
-    //Recreate framebuffers
-    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i)
+    // Framebuffers.
+    for (unsigned int i = 0; i < context.swapchain.imageCount; ++i) 
     {
-        destroyFrameBuffer(&context, &context.swapchain.framebuffers[i]);
+        vulkanFramebufferDestroy(&context, &context.swapchain.framebuffers[i]);
     }
 
     context.mainRenderpass.x = 0;
     context.mainRenderpass.y = 0;
-    context.mainRenderpass.width = context.framebufferWidth;
-    context.mainRenderpass.height = context.framebufferHeight;
+    context.mainRenderpass.w = context.framebufferWidth;
+    context.mainRenderpass.h = context.framebufferHeight;
 
     regenerateFramebuffers(BACKEND, &context.swapchain, &context.mainRenderpass);
 
     createCommandBuffers(BACKEND);
 
-    //Cleaeet the recreating flag
-    context.recreateSwapchain = false;
+    // Clear the recreating flag.
+    context.recreatingSwapchain = false;
 
     return true;
 }
 
-bool createBuffers(vulkanContext* CONTEXT)
+bool createBuffers(vulkanContext* CONTEXT) 
 {
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
     VkMemoryPropertyFlags memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
     const unsigned long long vertexBufferSize = sizeof(Vertex3D) * 1024 * 1024;
@@ -694,11 +866,26 @@ bool createBuffers(vulkanContext* CONTEXT)
                             &context.objectVertexBuffer))
     {
         FORGE_LOG_ERROR("Error creating vertex buffer");
+=======
+    VkMemoryPropertyFlagBits memoryPropertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    const unsigned long long vertex_buffer_size = sizeof(Vertex3D) * 1024 * 1024;
+    if (!vulkanBufferCreate(
+            CONTEXT,
+            vertex_buffer_size,
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            memoryPropertyFlags,
+            true,
+            &CONTEXT->objectVertexBuffer)) 
+    {
+        FORGE_LOG_ERROR("Error creating vertex buffer.");
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
         return false;
     }
     CONTEXT->geometryVertexOffset = 0;
 
     const unsigned long long indexBufferSize = sizeof(unsigned int) * 1024 * 1024;
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
 
     if (!createVulkanBuffer(CONTEXT, 
                             indexBufferSize, 
@@ -708,9 +895,24 @@ bool createBuffers(vulkanContext* CONTEXT)
                             &context.objectIndexBuffer))
     {
         FORGE_LOG_ERROR("Error creating vertex buffer");
+=======
+    if (!vulkanBufferCreate(
+            CONTEXT,
+            indexBufferSize,
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            memoryPropertyFlags,
+            true,
+            &CONTEXT->objectIndexBuffer)) 
+    {
+        FORGE_LOG_ERROR("Error creating vertex buffer.");
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
         return false;
     }
     CONTEXT->geometryIndexOffset = 0;
 
     return true;
+<<<<<<< HEAD:engine/src/renderer/vulkan/vulkan_backend.c
 }
+=======
+}
+>>>>>>> bug-Fix-3D:Just_Forge_Engine/src/renderer/vulkan/vulkan_backend.c
