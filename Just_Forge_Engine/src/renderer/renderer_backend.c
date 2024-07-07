@@ -10,6 +10,7 @@ bool createRendererBackend(rendererBackendType TYPE, rendererBackend* OUTPUT_BAC
     {
         OUTPUT_BACKEND->initialize = vulkanRendererBackendInitialize;
         OUTPUT_BACKEND->shutdown = vulkanRendererBackendShutdown;
+        OUTPUT_BACKEND->updateGlobalState = vulkanRendererBackendUpdateGlobalState;
         OUTPUT_BACKEND->beginFrame = vulkanRendererBackendBeginFrame;
         OUTPUT_BACKEND->endFrame = vulkanRendererBackendEndFrame;
         OUTPUT_BACKEND->resized = vulkanRendererBackendOnResized;
@@ -25,6 +26,7 @@ void destroyRendererBackend(rendererBackend* BACKEND)
     BACKEND->initialize = 0;
     BACKEND->shutdown = 0;
     BACKEND->beginFrame = 0;
+    BACKEND->updateGlobalState = 0;
     BACKEND->endFrame = 0;
     BACKEND->resized = 0;
 }

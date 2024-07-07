@@ -33,6 +33,7 @@ typedef struct rendererBackend
     void (*resized)(struct rendererBackend* BACKEND, unsigned short WIDTH, unsigned short HEIGHT);
 
     bool (*beginFrame)(struct rendererBackend* BACKEND, float DELTA_TIME);
+    void (*updateGlobalState)(Matrix4 PROJECTION, Matrix4 VIEW, Vector3D VIEW_POS, Vector4D AMBIENT_COLOR, int MODE);
     bool (*endFrame)(struct rendererBackend* BACKEND, float DELTA_TIME);    
 } rendererBackend;
 

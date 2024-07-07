@@ -4,6 +4,8 @@
 #include "core/logger.h"
 #include "core/memory.h"
 
+#include "math/forge_math.h"
+
 
 // - - - Rendering System - - - -
 
@@ -86,6 +88,7 @@ bool rendererSystemDrawFrame(renderPacket* PACKET)
     // If the begin frame returned successfully, mid-frame operations may continue.
     if (rendererBeginFrame(PACKET->deltaTime)) 
     {
+        statePtr->backend.updateGlobalState(identityMatrix4(), identityMatrix4(), zeroVector3D(), oneVector4D(), 0); // TODO: temp
         // End the frame. If this fails, it is likely unrecoverable.
         bool result = rendererEndFrame(PACKET->deltaTime);
 

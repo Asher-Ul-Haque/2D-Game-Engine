@@ -473,6 +473,21 @@ bool vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME)
         &context.mainRenderpass,
         context.swapchain.framebuffers[context.imageIndex].handle);
 
+
+    return true;
+}
+
+void vulkanRendererBackendUpdateGlobalState(Matrix4 PROJECTION, Matrix4 VIEW, Vector3D VIEW_POS, Vector4D AMBIENCE_COLOR, int MODE)
+{
+    vulkanCommandBuffer* commandBuffer = &context.graphicsCommandBUffers[context.imageIndex];
+    vulkanObjectShaderUse(&context, &context.objectShader);
+    context.objectShader.globalUniformBufferObject.projection = PROJECTION;
+    context.objectShader.globalUniformBufferObject.view = VIEW;
+
+    // TODO: other UBO properties
+
+    vulkanObjectShaderUpdateGlobalState(&context, &context.objectShader);
+    
     // TODO: temporary test code
     vulkanObjectShaderUse(&context, &context.objectShader);
 
@@ -486,9 +501,8 @@ bool vulkanRendererBackendBeginFrame(rendererBackend* BACKEND, float DELTA_TIME)
     // Issue the draw.
     vkCmdDrawIndexed(commandBuffer->handle, 6, 1, 0, 0, 0);
     // TODO: end temporary test code
-
-    return true;
 }
+
 
 bool vulkanRendererBackendEndFrame(rendererBackend* BACKEND, float DELTA_TIME) 
 {

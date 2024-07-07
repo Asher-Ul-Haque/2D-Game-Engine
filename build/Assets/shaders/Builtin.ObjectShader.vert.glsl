@@ -3,7 +3,6 @@
 
 layout(location = 0) in vec3 in_position;
 
-layout(location = 0) out vec3 out_position;
 
 layout(set = 0, binding = 0) uniform global_uniform_object {
     mat4 projection;
