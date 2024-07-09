@@ -210,6 +210,12 @@ void vulkanObjectShaderUpdateGlobalState(vulkanContext* CONTEXT, struct vulkanOb
                              0, 
                              &SHADER->globalUniformBufferObject);
 
+    if (globalDescriptor == VK_NULL_HANDLE)
+    {
+        FORGE_LOG_ERROR("Global UBO is NULL");
+        return;
+    }
+
         VkDescriptorBufferInfo bufferInfo;
         bufferInfo.buffer = SHADER->globalUniformBuffer.handle;
         bufferInfo.offset = offset;
