@@ -130,7 +130,7 @@ bool vulkanObjectShaderCreate(vulkanContext* CONTEXT, vulkanObjectShader* OUTPUT
 
     if (!vulkanBufferCreate(
         CONTEXT,
-        sizeof(globalUBO),
+        sizeof(globalUBO) * 3,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         true,
@@ -194,32 +194,39 @@ void vulkanObjectShaderUpdateGlobalState(vulkanContext* CONTEXT, struct vulkanOb
     VkCommandBuffer commandBuffer = CONTEXT->graphicsCommandBUffers[imageIndex].handle;
     VkDescriptorSet globalDescriptor = SHADER->globalDescriptorSet[imageIndex];
 
-    // Bind the global descriptor set to be updated
+   // if (!SHADER->descriptorUpdated[imageIndex]) 
+    //{
+        // Bind the global descriptor set to be updated
+        //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, SHADER->pipeline.pipelineLayout, 0, 1, &globalDescriptor, 0, 0);
+
+        // Configure the descriptor for the given index
+        unsigned int range = sizeof(globalUBO);
+        unsigned long long offset = 0;
+
+        // Copy the data to buffer
+        vulkanBufferLoadData(CONTEXT, 
+                             &SHADER->globalUniformBuffer, offset, 
+                             range, 
+                             0, 
+                             &SHADER->globalUniformBufferObject);
+
+        VkDescriptorBufferInfo bufferInfo;
+        bufferInfo.buffer = SHADER->globalUniformBuffer.handle;
+        bufferInfo.offset = offset;
+        bufferInfo.range = range;
+
+        // Update descriptor sets
+        VkWriteDescriptorSet descriptorWrite = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+        descriptorWrite.dstSet = globalDescriptor;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.dstBinding = 0;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = &bufferInfo;
+
+        vkUpdateDescriptorSets(CONTEXT->device.logicalDevice, 1, &descriptorWrite, 0, 0);
+       // SHADER->descriptorUpdated[imageIndex] = true;
+    //}
+
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, SHADER->pipeline.pipelineLayout, 0, 1, &globalDescriptor, 0, 0);
-
-    // Configure the descriptor for the given index
-    unsigned int range = sizeof(globalUBO);
-    unsigned long long offset = 0;
-
-    // Copy the data to buffer
-    vulkanBufferLoadData(CONTEXT, 
-                         &SHADER->globalUniformBuffer, offset, 
-                         range, 
-                         0, 
-                         &SHADER->globalUniformBufferObject);
-    VkDescriptorBufferInfo bufferInfo;
-    bufferInfo.buffer = SHADER->globalUniformBuffer.handle;
-    bufferInfo.offset = offset;
-    bufferInfo.range = range;
-
-    // Update descriptor sets
-    VkWriteDescriptorSet descriptorWrite = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-    descriptorWrite.dstSet = SHADER->globalDescriptorSet[imageIndex];
-    descriptorWrite.dstArrayElement = 0;
-    descriptorWrite.dstBinding = 0;
-    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pBufferInfo = &bufferInfo;
-
-    vkUpdateDescriptorSets(CONTEXT->device.logicalDevice, 1, &descriptorWrite, 0, 0);
 }

@@ -251,17 +251,19 @@ bool vulkanRendererBackendInitialize(rendererBackend* BACKEND, const char* APP_N
     Vertex3D verts[vertCount];
     forgeZeroMemory(verts, sizeof(Vertex3D) * vertCount);
 
-    verts[0].position.x = 0.0;
-    verts[0].position.y = -0.5;
+    const float scale = 10.0f;
 
-    verts[1].position.x = 0.5;
-    verts[1].position.y = 0.5;
+    verts[0].position.x = 0.5 * scale;
+    verts[0].position.y = -0.5 * scale;
 
-    verts[2].position.x = 0;
-    verts[2].position.y = 0.5;
+    verts[1].position.x = 0.5 * scale;
+    verts[1].position.y = 0.5 * scale;
 
-    verts[3].position.x = 0.5;
-    verts[3].position.y = -0.5;
+    verts[2].position.x = -0.5 * scale;
+    verts[2].position.y = 0.5 * scale;
+
+    verts[3].position.x = 0.5 * scale;
+    verts[3].position.y = -0.5 * scale;
 
     const unsigned int indexCount = 6;
     unsigned int indices[indexCount] = {0, 1, 2, 0, 3, 1};

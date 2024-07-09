@@ -59,11 +59,6 @@ bool createShaderModule(
     SHADER_STAGES[STAGE_INDEX].shaderStageCreateInfo.module = SHADER_STAGES[STAGE_INDEX].handle;
     SHADER_STAGES[STAGE_INDEX].shaderStageCreateInfo.pName = "main";
 
-    if (fileBuffer) 
-    {
-        forgeFreeMemory(fileBuffer, sizeof(unsigned char) * size, MEMORY_TAG_FILE);
-        fileBuffer = 0;
-    }
 
     return true;
 }

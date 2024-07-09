@@ -5,6 +5,7 @@
 #include "core/memory.h"
 
 #include "math/forge_math.h"
+#include "math/math_types.h"
 
 
 // - - - Rendering System - - - -
@@ -88,7 +89,15 @@ bool rendererSystemDrawFrame(renderPacket* PACKET)
     // If the begin frame returned successfully, mid-frame operations may continue.
     if (rendererBeginFrame(PACKET->deltaTime)) 
     {
-        statePtr->backend.updateGlobalState(identityMatrix4(), identityMatrix4(), zeroVector3D(), oneVector4D(), 0); // TODO: temp
+        static float z = -1.0f;
+        static float x = 0.0f;
+        static float y = 0.0f;
+        Matrix4 projection = perspectiveMatrix(degreeToRadian(45.0f), 1280/720.0f, 0.1f, 1000.0f);
+        Matrix4 view = translationMatrix4((Vector3D){x, y, z});
+        statePtr->backend.updateGlobalState(projection, view, zeroVector3D(), oneVector4D(), 0); // TODO: temp
+        z -= 0.01f;
+        x += 0.01f;
+        y += 0.01f;
         // End the frame. If this fails, it is likely unrecoverable.
         bool result = rendererEndFrame(PACKET->deltaTime);
 
